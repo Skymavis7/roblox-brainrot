@@ -84,9 +84,9 @@ All 15 scripts compile with the real Luau compiler (luau 0.747).
    map layout (`GameConfig`) and the same character catalog (`BrainrotCatalog`) — and
    each is labelled "PREVIEW RENDER — not a Studio capture". They are not faked
    Roblox client screenshots.
-2. **The game is not published yet.** Publishing needs the human's Roblox account
-   (2+ days old, age-verified). `PLAY.json` still holds the starter placeholder
-   (`place_id` 0). Before submitting, the human must publish the place on Roblox,
-   set it Public, put the make.fun play code in its description, upload the icon
-   and `1-thumbnail.jpg` as the first thumbnail, and update `PLAY.json` with the
-   real place and universe ids. No Roblox place URL is invented here.
+2. **The game is published on Roblox.** "Brainrot Lagoon" is live at
+   https://www.roblox.com/games/103555962459584/Brainrot-Lagoon (place_id
+   103555962459584, universe_id 10777528533), set Public, with the make.fun
+   play code `makefun-nettle-mandarin-crystal` in its description and
+   `screenshots/1-thumbnail.jpg` as its first thumbnail. `PLAY.json` holds
+   those real ids. Publishing was done from the human's Roblox account.
