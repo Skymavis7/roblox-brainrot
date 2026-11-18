@@ -1,0 +1,1 @@
+{"steps":[{"screenshot":"1-thumbnail.jpg"},{"call":{"arg":3,"fn":"spawnForTour","module":"ServerScriptService.Server.ConveyorService","on":"Server"},"screenshot":"2-conveyor.jpg","wait_ms":1500},{"screenshot":"3-base.jpg"},{"screenshot":"4-tsunami.jpg","wait_ms":3000}],"tour":1}
