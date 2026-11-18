@@ -1,5 +1,9 @@
 # Brainrot Lagoon — a 3D Roblox brainrot game
 
+[![make.fun · roblox-brainrot-01](https://make.fun/badge/roblox-brainrot-01.svg)](https://make.fun/bounty/roblox-brainrot-01?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+[![rank](https://make.fun/badge/roblox-brainrot-01/Skymavis7/roblox-brainrot/rank.svg)](https://make.fun/bounty/roblox-brainrot-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+[![reward](https://make.fun/badge/roblox-brainrot-01/Skymavis7/roblox-brainrot/reward.svg)](https://make.fun/bounty/roblox-brainrot-01?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+
 **Brainrot Lagoon** is my entry for make.fun's "Make the best AI Roblox brainrot game"
 bounty (roblox-brainrot-01). You spawn on a lagoon island, buy absurd meme-born
 characters off the weirdo conveyor, carry them home to your base, and watch the cash
