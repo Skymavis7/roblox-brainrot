@@ -1,10 +1,11 @@
--- PlayerData: the one place that holds a player's live state.
--- Cash lives in leaderstats (so the HUD can read it); everything else lives here.
--- No other service keeps its own copy of these numbers.
+-- PlayerData — the single place that holds a player's live state.
+-- Cash is mirrored in leaderstats so the HUD can watch it; everything else
+-- lives only here. No other service keeps its own copy of these numbers.
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local GameConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("GameConfig"))
+local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
 
 local PlayerData = {}
 
@@ -14,8 +15,8 @@ export type PlayerState = {
 	cash: number,
 	rebirths: number,
 	incomeMultiplier: number,
-	placed: { [number]: Model }, -- slot index -> brainrot model on the base
-	carried: Model?, -- brainrot currently following the player
+	placed: { [number]: Model }, -- slot index -> brainrot model standing on the base
+	carried: Model?, -- brainrot currently trailing the player
 	lockUntil: number,
 	lockCooldownUntil: number,
 	slapCooldownUntil: number,
@@ -23,33 +24,36 @@ export type PlayerState = {
 	slotCount: number,
 }
 
-local states: { [Player]: PlayerState } = {}
+local byPlayer: { [Player]: PlayerState } = {}
 
--- Create the state for a player who just joined, with their leaderstats.
+-- Set one leaderstat IntValue on a player, when it exists and is the right class.
+local function setLeaderstat(player: Player, name: string, value: number)
+	local folder = player:FindFirstChild("leaderstats")
+	if folder == nil then
+		return
+	end
+	local entry = folder:FindFirstChild(name)
+	if entry ~= nil and entry:IsA("IntValue") then
+		entry.Value = value
+	end
+end
+
+-- Build a fresh state for a player who just joined, leaderstats included.
 function PlayerData.create(player: Player): PlayerState
-	local leaderstats = Instance.new("Folder")
-	leaderstats.Name = "leaderstats"
-	leaderstats.Parent = player
+	local folder = Instance.new("Folder")
+	folder.Name = "leaderstats"
+	folder.Parent = player
 
-	local cash = Instance.new("IntValue")
-	cash.Name = "Cash"
-	cash.Value = GameConfig.STARTING_CASH
-	cash.Parent = leaderstats
-
-	local income = Instance.new("IntValue")
-	income.Name = "Income"
-	income.Value = 0
-	income.Parent = leaderstats
-
-	local rebirths = Instance.new("IntValue")
-	rebirths.Name = "Rebirths"
-	rebirths.Value = 0
-	rebirths.Parent = leaderstats
-
-	local brainrots = Instance.new("IntValue")
-	brainrots.Name = "Brainrots"
-	brainrots.Value = 0
-	brainrots.Parent = leaderstats
+	local function stat(name: string, start: number)
+		local value = Instance.new("IntValue")
+		value.Name = name
+		value.Value = start
+		value.Parent = folder
+	end
+	stat("Cash", GameConfig.STARTING_CASH)
+	stat("Income", 0)
+	stat("Rebirths", 0)
+	stat("Brainrots", 0)
 
 	local state: PlayerState = {
 		player = player,
@@ -65,67 +69,57 @@ function PlayerData.create(player: Player): PlayerState
 		upgrades = { speed = false, income = false, slots = false },
 		slotCount = GameConfig.BASE_SLOT_COUNT,
 	}
-	states[player] = state
+	byPlayer[player] = state
 	return state
 end
 
 function PlayerData.get(player: Player): PlayerState?
-	return states[player]
+	return byPlayer[player]
 end
 
--- Drop the state when a player leaves (their brainrots go with them).
+-- Forget a player entirely when they leave (their brainrots go with them).
 function PlayerData.remove(player: Player)
-	states[player] = nil
+	byPlayer[player] = nil
 end
 
 function PlayerData.all(): { [Player]: PlayerState }
-	return states
+	return byPlayer
 end
 
--- Cash and leaderstats always move together.
+-- Cash and its leaderstat always move together; cash never goes below zero.
 function PlayerData.setCash(state: PlayerState, amount: number)
 	state.cash = math.max(0, math.floor(amount))
-	local leaderstats = state.player:FindFirstChild("leaderstats")
-	if leaderstats then
-		local cashValue = leaderstats:FindFirstChild("Cash")
-		if cashValue and cashValue:IsA("IntValue") then
-			cashValue.Value = state.cash
-		end
-	end
+	setLeaderstat(state.player, "Cash", state.cash)
 end
 
 function PlayerData.addCash(state: PlayerState, amount: number)
 	PlayerData.setCash(state, state.cash + amount)
 end
 
+-- Rebirths set the income multiplier too: +50% per rebirth, on top of x1.
 function PlayerData.setRebirths(state: PlayerState, count: number)
 	state.rebirths = count
 	state.incomeMultiplier = 1 + GameConfig.REBIRTH_MULTIPLIER_PER * count
-	local leaderstats = state.player:FindFirstChild("leaderstats")
-	if leaderstats then
-		local value = leaderstats:FindFirstChild("Rebirths")
-		if value and value:IsA("IntValue") then
-			value.Value = count
-		end
-	end
+	setLeaderstat(state.player, "Rebirths", count)
 end
 
--- Dollars per second from everything sitting on this player's base.
+-- Dollars per second from everything on this player's base, after the
+-- Double Scoop upgrade and the rebirth multiplier.
 function PlayerData.calculateIncome(state: PlayerState): number
-	local total = 0
+	local perSecond = 0
 	for _, model in pairs(state.placed) do
 		local rate = model:GetAttribute("Rate")
 		if typeof(rate) == "number" then
-			total += rate
+			perSecond += rate
 		end
 	end
 	if state.upgrades.income then
-		total *= 2
+		perSecond *= 2
 	end
-	return total * state.incomeMultiplier
+	return perSecond * state.incomeMultiplier
 end
 
--- How many brainrots sit on the player's base right now.
+-- How many brainrots are standing on the player's base right now.
 function PlayerData.countPlaced(state: PlayerState): number
 	local count = 0
 	for _ in pairs(state.placed) do
@@ -135,16 +129,10 @@ function PlayerData.countPlaced(state: PlayerState): number
 end
 
 function PlayerData.refreshBrainrotCount(state: PlayerState)
-	local leaderstats = state.player:FindFirstChild("leaderstats")
-	if leaderstats then
-		local value = leaderstats:FindFirstChild("Brainrots")
-		if value and value:IsA("IntValue") then
-			value.Value = PlayerData.countPlaced(state)
-		end
-	end
+	setLeaderstat(state.player, "Brainrots", PlayerData.countPlaced(state))
 end
 
--- First free slot on the player's base, or nil when it is full.
+-- The first free slot on the player's base, or nil when it is full.
 function PlayerData.firstFreeSlot(state: PlayerState): number?
 	for slot = 1, state.slotCount do
 		if state.placed[slot] == nil then
@@ -159,7 +147,7 @@ function PlayerData.isBaseLocked(state: PlayerState): boolean
 	return os.clock() < state.lockUntil
 end
 
--- Seconds left on the base lock, or 0.
+-- Whole seconds left on the base lock, or 0.
 function PlayerData.lockSecondsLeft(state: PlayerState): number
 	return math.max(0, math.floor(state.lockUntil - os.clock()))
 end

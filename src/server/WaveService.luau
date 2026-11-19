@@ -1,11 +1,13 @@
--- WaveService: the Noodle Tsunami. Every cycle a giant wave of noodles sweeps the map
--- north to south. Ten seconds of warning, then the wall rolls through: anyone caught
--- outside their own base is flung back to spawn and drops whatever they were carrying.
--- Dash home with the catch — that is the game's tension.
+-- WaveService — the Noodle Tsunami. Every cycle a giant wave of noodles sweeps
+-- the map north to south. Ten seconds of warning, then the wall rolls through:
+-- anyone caught outside their own base is flung back to spawn and drops
+-- whatever they were carrying. Dash home with the catch — that is the game's
+-- tension.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
-local GameConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("GameConfig"))
+local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
 local BaseService = require(script.Parent:WaitForChild("BaseService"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 
@@ -14,7 +16,7 @@ local WaveService = {}
 local waveWall: Part
 local gameState: Folder
 local countdownValue: IntValue
-local stateValue: StringValue
+local phaseValue: StringValue
 local notifyRemote: RemoteEvent
 
 -- Fling one caught player back to spawn and make them drop their brainrot.
@@ -24,6 +26,7 @@ local function catchPlayer(player: Player, state)
 	if root == nil then
 		return
 	end
+	-- The conveyor owns the drop (required lazily: it requires services back).
 	local conveyor = require(script.Parent:WaitForChild("ConveyorService"))
 	if state.carried ~= nil then
 		conveyor.dropCarried(player, state, true)
@@ -54,19 +57,19 @@ end
 function WaveService.runWaveLoop()
 	while true do
 		-- Calm: the countdown ticks down for everyone to see.
-		stateValue.Value = "Calm"
+		phaseValue.Value = "Calm"
 		for t = GameConfig.WAVE_CYCLE_SECONDS, 1, -1 do
 			countdownValue.Value = t
 			task.wait(1)
 		end
 		-- Warning: ten seconds to get home.
-		stateValue.Value = "Warning"
+		phaseValue.Value = "Warning"
 		for t = GameConfig.WAVE_WARNING_SECONDS, 1, -1 do
 			countdownValue.Value = t
 			task.wait(1)
 		end
 		-- Sweep: the wall rolls north to south across the whole island.
-		stateValue.Value = "Wave"
+		phaseValue.Value = "Wave"
 		countdownValue.Value = 0
 		waveWall.Transparency = 0.15
 		local startZ = GameConfig.WAVE_START_Z
@@ -87,7 +90,7 @@ function WaveService.start(state: { gameState: Folder, notify: RemoteEvent })
 	gameState = state.gameState
 	notifyRemote = state.notify
 	countdownValue = gameState:WaitForChild("WaveCountdown") :: IntValue
-	stateValue = gameState:WaitForChild("WaveState") :: StringValue
+	phaseValue = gameState:WaitForChild("WaveState") :: StringValue
 	waveWall = Workspace:WaitForChild("WaveWall") :: Part
 	task.spawn(WaveService.runWaveLoop)
 end

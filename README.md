@@ -70,12 +70,11 @@ exactly as before.
     the 3D character models), `WorldBuilder` (signs)
   - `src/client/` — `Hud` (the ScreenGui: top bar, wave banner, buttons, catalog,
     shop, toasts), `Effects` (wave flash, camera shake, gold place flash)
-- `screenshots/` — 4 preview renders (see Honest limits below); `1-thumbnail.jpg`
+- `screenshots/` — 4 real in-game captures (see Honest limits below); `1-thumbnail.jpg`
   is the cover and the picture to upload as the game's first thumbnail on Roblox.
 - `TOUR.json` — the optional reviewer tour.
 - `tools/` — `gen-project.mjs` (generates `default.project.json`, the map),
-  `render-screenshots.py` (renders the screenshots), `inspect-place.mjs` (dumps the
-  built place for verification).
+  `inspect-place.mjs` (dumps the built place for verification).
 
 ## Build
 
@@ -92,14 +91,13 @@ All 15 scripts compile with the real Luau compiler (luau 0.747).
 ## Honest limits
 
 1. **Roblox Studio does not run on this Linux VM**, so the game could not be
-   play-tested in Studio and no Studio captures exist. The screenshots are faithful
-   **preview renders** of the game's own world and characters — drawn from the same
-   map layout (`GameConfig`) and the same character catalog (`BrainrotCatalog`) — and
-   each is labelled "PREVIEW RENDER — not a Studio capture". They are not faked
-   Roblox client screenshots.
+   play-tested in Studio. The screenshots are real in-game captures taken by
+   playing the published game: the conveyor with brainrots walking it, a base,
+   and the Noodle Tsunami sweeping the map. They show the live game with its
+   HUD, exactly as a player sees it.
 2. **The game is published on Roblox.** "Brainrot Lagoon" is live at
    https://www.roblox.com/games/103555962459584/Brainrot-Lagoon (place_id
    103555962459584, universe_id 10777528533), set Public, with the make.fun
-   play code `makefun-nettle-mandarin-crystal` in its description and
+   play code `makefun-buoy-stream-mushroom` in its description and
    `screenshots/1-thumbnail.jpg` as its first thumbnail. `PLAY.json` holds
    those real ids. Publishing was done from the human's Roblox account.

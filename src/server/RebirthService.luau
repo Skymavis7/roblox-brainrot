@@ -1,9 +1,12 @@
--- RebirthService: rebirths and the cash shop. A rebirth costs more every time
--- (100k, then double), wipes your cash and brainrots, and adds +50% income forever.
--- The shop sells Speed Boots, Double Scoop income and a 4-slot base extension.
+-- RebirthService — rebirths and the cash shop. A rebirth costs more every time
+-- (100k, then double), wipes your cash and brainrots, and adds +50% income
+-- forever. The shop sells Speed Boots, Double Scoop income and a 4-slot base
+-- extension.
 
-local BrainrotCatalog = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("BrainrotCatalog"))
-local GameConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("GameConfig"))
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local BrainrotCatalog = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("BrainrotCatalog"))
+local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
 local BaseService = require(script.Parent:WaitForChild("BaseService"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 

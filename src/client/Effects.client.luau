@@ -1,16 +1,17 @@
--- Effects: client-side feedback for the big moments.
--- A red flash and a shake when the tsunami warning starts, a softer pulse while the
--- wave rolls through, and a gold flash when you place a brainrot on your base.
--- Purely visual: the server decides everything that matters.
+-- Effects — client-side feedback for the big moments.
+-- A red flash and a shake when the tsunami warning starts, a softer pulse while
+-- the wave rolls through, and a gold flash when you place a brainrot on your
+-- base. Purely visual: the server decides everything that matters.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local gameState = ReplicatedStorage:WaitForChild("GameState")
-local waveState = gameState:WaitForChild("WaveState") :: StringValue
+local wavePhase = gameState:WaitForChild("WaveState") :: StringValue
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "BrainrotEffects"
@@ -37,9 +38,9 @@ local function shakeCamera(strength: number, duration: number)
 	end
 	shaking = true
 	shakeStrength = strength
-	local camera = workspace.CurrentCamera
-	local start = os.clock()
-	while os.clock() - start < duration and camera ~= nil do
+	local camera = Workspace.CurrentCamera
+	local started = os.clock()
+	while os.clock() - started < duration and camera ~= nil do
 		local offset = Vector3.new(
 			(math.random() - 0.5) * shakeStrength,
 			(math.random() - 0.5) * shakeStrength,
@@ -60,20 +61,22 @@ local function pulseFlash(targetTransparency: number, holdSeconds: number)
 	flash.BackgroundTransparency = 1
 end
 
--- Wave phases drive the feedback: warning flashes red and shakes, the wave itself pulses.
-waveState:GetPropertyChangedSignal("Value"):Connect(function()
-	if waveState.Value == "Warning" then
+-- Wave phases drive the feedback: the warning flashes red and shakes, the
+-- wave itself pulses orange.
+wavePhase:GetPropertyChangedSignal("Value"):Connect(function()
+	if wavePhase.Value == "Warning" then
 		flash.BackgroundColor3 = Color3.fromRGB(255, 40, 40)
 		task.spawn(pulseFlash, 0.75, 0.4)
 		task.spawn(shakeCamera, 0.6, 0.8)
-	elseif waveState.Value == "Wave" then
+	elseif wavePhase.Value == "Wave" then
 		flash.BackgroundColor3 = Color3.fromRGB(255, 120, 40)
 		task.spawn(pulseFlash, 0.85, 1.5)
 		task.spawn(shakeCamera, 1.2, 2.5)
 	end
 end)
 
--- Gold flash when a brainrot lands on your base (your Brainrots leaderstat went up).
+-- Gold flash when a brainrot lands on your base (your Brainrots leaderstat
+-- went up).
 local leaderstats = player:WaitForChild("leaderstats")
 local brainrotsValue = leaderstats:WaitForChild("Brainrots") :: IntValue
 local lastCount = brainrotsValue.Value

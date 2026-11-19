@@ -1,9 +1,11 @@
--- DataService: saves a player's cash, rebirths and upgrades between sessions.
--- Everything is wrapped in pcall: in Studio without API access it simply does nothing.
+-- DataService — saves a player's cash, rebirths and upgrades between sessions.
+-- Everything is wrapped in pcall: in Studio without API access it simply does
+-- nothing, and a failed load keeps the fresh start.
 
 local DataStoreService = game:GetService("DataStoreService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local GameConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("GameConfig"))
+local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 
 local DataService = {}
@@ -13,7 +15,8 @@ pcall(function()
 	store = DataStoreService:GetDataStore("BrainrotLagoonSaveV1")
 end)
 
--- Load a returning player's save into their state. Silently keeps the fresh start on any failure.
+-- Load a returning player's save into their state. Silently keeps the fresh
+-- start on any failure or any save that is not a table.
 function DataService.loadSave(state)
 	if store == nil then
 		return

@@ -1,8 +1,9 @@
 -- Brainrot Lagoon — server bootstrap.
--- Creates the remotes and shared values, claims a base per player, and starts every service:
--- MoneyService (the income tick), ConveyorService (buy, carry, place), StealService
--- (stealing and slapping), WaveService (the Noodle Tsunami), RebirthService (rebirths,
--- upgrades, base lock) and DataService (saves). Nothing here runs the game on its own.
+-- Builds the remotes and the shared values, claims a base per player, and
+-- starts every service: MoneyService (the income tick), ConveyorService (buy,
+-- carry, place), StealService (stealing and slapping), WaveService (the Noodle
+-- Tsunami), RebirthService (rebirths, upgrades, base lock) and DataService
+-- (saves). Nothing here runs the game on its own.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -31,12 +32,13 @@ waveCountdown.Name = "WaveCountdown"
 waveCountdown.Value = GameConfig.WAVE_CYCLE_SECONDS
 waveCountdown.Parent = gameState
 
-local waveState = Instance.new("StringValue")
-waveState.Name = "WaveState"
-waveState.Value = "Calm"
-waveState.Parent = gameState
+local wavePhase = Instance.new("StringValue")
+wavePhase.Name = "WaveState"
+wavePhase.Value = "Calm"
+wavePhase.Parent = gameState
 
--- RemoteEvents: client -> server (slap, rebirth, upgrades, lock) and server -> client (toasts).
+-- RemoteEvents: client -> server (slap, rebirth, upgrades, lock) and server
+-- -> client (toasts).
 local remotes = Instance.new("Folder")
 remotes.Name = "Remotes"
 remotes.Parent = ReplicatedStorage
@@ -62,7 +64,8 @@ for index = 1, #GameConfig.BASES do
 	BaseService.registerBaseFolder(index, folder)
 end
 
--- A new player: state, save, a base, and their walk speed back if they own the boots.
+-- A new player: state, save, a base, and their walk speed back if they own
+-- the boots.
 local function onPlayerAdded(player: Player)
 	local state = PlayerData.create(player)
 	DataService.loadSave(state)

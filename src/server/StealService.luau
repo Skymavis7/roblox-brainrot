@@ -1,12 +1,12 @@
--- StealService: stealing from other players' bases, and the slap that stops it.
--- A brainrot on an unlocked base can be stolen: it follows the thief home, and if the
--- thief reaches their own base it becomes theirs. The owner (or anyone) can slap the
--- thief to knock them back and make the brainrot run home. A locked base cannot be stolen from.
+-- StealService — stealing from other players' bases, and the slap that stops it.
+-- A brainrot on an unlocked base can be stolen: it follows the thief home, and
+-- if the thief reaches their own base it becomes theirs. The owner (or anyone)
+-- can slap the thief to knock them back and make the brainrot run home. A
+-- locked base cannot be stolen from.
 
-local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local BrainrotCatalog = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("BrainrotCatalog"))
-local GameConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("GameConfig"))
+local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
 local BaseService = require(script.Parent:WaitForChild("BaseService"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 
@@ -14,7 +14,8 @@ local StealService = {}
 
 local notifyRemote: RemoteEvent
 
--- Try to steal a brainrot off someone's base. The lock and the carrier rule decide it.
+-- Try to steal a brainrot off someone's base. The lock and the carrier rule
+-- decide it; a stolen brainrot remembers its real home so it can run back.
 function StealService.trySteal(thief: Player, thiefState, model: Model)
 	local ownerId = model:GetAttribute("OwnerId")
 	if typeof(ownerId) ~= "number" or ownerId == thief.UserId then
@@ -47,14 +48,16 @@ function StealService.trySteal(thief: Player, thiefState, model: Model)
 	model:SetAttribute("OwnerId", thief.UserId)
 	thiefState.carried = model
 	thief:SetAttribute("Carrying", model.Name)
+	-- Hand the follower to the conveyor's trailing loop (required lazily: the
+	-- conveyor requires this module back, so an eager require would cycle).
 	local conveyor = require(script.Parent:WaitForChild("ConveyorService"))
-	-- Hand the follower over to the conveyor's following loop via the shared table.
 	conveyor.registerFollower(thief, model)
 	notifyRemote:FireClient(thief, "You stole " .. model.Name .. "! RUN home before they slap you!")
 	notifyRemote:FireClient(owner, thief.DisplayName .. " is stealing your " .. model.Name .. "! SLAP them!")
 end
 
--- Slap the nearest other player in range: knock them back and drop what they carry.
+-- Slap the nearest other player in range: knock them back and make them drop
+-- whatever they were carrying.
 function StealService.slap(player: Player, state)
 	local now = os.clock()
 	if now < state.slapCooldownUntil then
@@ -91,8 +94,8 @@ function StealService.slap(player: Player, state)
 	if victimRoot == nil then
 		return
 	end
-	local direction = (victimRoot.Position - root.Position).Unit
-	victimRoot.AssemblyLinearVelocity = direction * GameConfig.SLAP_KNOCKBACK + Vector3.new(0, 25, 0)
+	local away = (victimRoot.Position - root.Position).Unit
+	victimRoot.AssemblyLinearVelocity = away * GameConfig.SLAP_KNOCKBACK + Vector3.new(0, 25, 0)
 	if victimHumanoid ~= nil then
 		victimHumanoid.WalkSpeed = 0
 		task.delay(1, function()

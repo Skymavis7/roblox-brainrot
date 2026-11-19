@@ -1,20 +1,23 @@
--- BaseService: the six player bases. Each player claims one base when they join;
--- their brainrots sit on its slot pads and earn money there. A base can be locked
--- against stealing, and the wave only spares players standing on their own base.
+-- BaseService — the six player bases. A player claims one when they join;
+-- their brainrots stand on its slot pads and earn money there. A base can be
+-- locked against stealing, and the tsunami only spares players standing on
+-- their own base.
 
-local GameConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("GameConfig"))
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
 local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
 
 local BaseService = {}
 
-local takenBases: { [number]: Player } = {}
-local baseFolders: { [number]: Model } = {}
+local owners: { [number]: Player } = {}
+local folders: { [number]: Model } = {}
 
--- Find the base plot for a player who just joined. Returns nil when all six are taken.
+-- Hand a joining player the first free base plot. Nil when all six are taken.
 function BaseService.assignBase(state): number?
 	for index = 1, #GameConfig.BASES do
-		if takenBases[index] == nil then
-			takenBases[index] = state.player
+		if owners[index] == nil then
+			owners[index] = state.player
 			state.baseIndex = index
 			return index
 		end
@@ -28,10 +31,10 @@ function BaseService.releaseBase(state)
 	if index == nil then
 		return
 	end
-	takenBases[index] = nil
+	owners[index] = nil
 	state.baseIndex = nil
-	local folder = baseFolders[index]
-	if folder then
+	local folder = folders[index]
+	if folder ~= nil then
 		for _, child in ipairs(folder:GetChildren()) do
 			if child:IsA("Model") then
 				child:Destroy()
@@ -40,39 +43,41 @@ function BaseService.releaseBase(state)
 	end
 end
 
--- The world position of one slot pad on a base.
+-- The world position of one slot pad on a base. An extended base (12 slots)
+-- uses the three-row layout; a plain one (8) the two-row layout.
 function BaseService.slotPosition(baseIndex: number, slot: number, slotCount: number): Vector3
-	local base = GameConfig.BASES[baseIndex]
+	local plot = GameConfig.BASES[baseIndex]
 	local offsets = GameConfig.SLOT_OFFSETS
 	if slotCount > GameConfig.BASE_SLOT_COUNT then
 		offsets = GameConfig.SLOT_OFFSETS_UPGRADED
 	end
 	local offset = offsets[slot] or offsets[1]
-	return base.position + offset + Vector3.new(0, 0.5, 0)
+	return plot.position + offset + Vector3.new(0, 0.5, 0)
 end
 
 -- Is a world position inside this base's plot (the wave's safe zone)?
 function BaseService.isInsideBase(baseIndex: number, position: Vector3): boolean
-	local base = GameConfig.BASES[baseIndex]
+	local plot = GameConfig.BASES[baseIndex]
 	local half = GameConfig.BASE_SIZE / 2
-	return math.abs(position.X - base.position.X) <= half
-		and math.abs(position.Z - base.position.Z) <= half
+	return math.abs(position.X - plot.position.X) <= half
+		and math.abs(position.Z - plot.position.Z) <= half
 end
 
--- Put a brainrot model onto a free slot of its owner's base and start it earning.
+-- Set a brainrot model down on a free slot of its owner's base and start it
+-- earning. False when the base is full or the player has none.
 function BaseService.placeOnBase(state, model: Model): boolean
 	local slot = PlayerData.firstFreeSlot(state)
 	local baseIndex = state.baseIndex
 	if slot == nil or baseIndex == nil then
 		return false
 	end
-	local target = BaseService.slotPosition(baseIndex, slot, state.slotCount)
+	local spot = BaseService.slotPosition(baseIndex, slot, state.slotCount)
 	model:SetAttribute("State", "Placed")
 	model:SetAttribute("OwnerId", state.player.UserId)
 	model:SetAttribute("Slot", slot)
-	model:PivotTo(CFrame.new(target))
-	local folder = baseFolders[baseIndex]
-	if folder then
+	model:PivotTo(CFrame.new(spot))
+	local folder = folders[baseIndex]
+	if folder ~= nil then
 		model.Parent = folder
 	end
 	state.placed[slot] = model
@@ -81,7 +86,7 @@ function BaseService.placeOnBase(state, model: Model): boolean
 	return true
 end
 
--- Take a brainrot off a base (stolen, rebirthed away, or returned after a drop).
+-- Lift a brainrot off a base (stolen, rebirthed away, or sent back home).
 function BaseService.removeFromBase(state, model: Model)
 	local slot = model:GetAttribute("Slot")
 	if typeof(slot) == "number" and state.placed[slot] == model then
@@ -91,7 +96,7 @@ function BaseService.removeFromBase(state, model: Model)
 end
 
 -- Lock this player's base against stealing for LOCK_DURATION seconds.
--- Returns false when the lock is still cooling down.
+-- False while the lock is still cooling down.
 function BaseService.lockBase(state): boolean
 	local now = os.clock()
 	if now < state.lockCooldownUntil then
@@ -102,9 +107,9 @@ function BaseService.lockBase(state): boolean
 	return true
 end
 
--- The folder in the world that holds one base's placed brainrots.
+-- Remember the folder in the world that holds one base's placed brainrots.
 function BaseService.registerBaseFolder(index: number, folder: Model)
-	baseFolders[index] = folder
+	folders[index] = folder
 end
 
 return BaseService

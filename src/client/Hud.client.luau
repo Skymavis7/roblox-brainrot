@@ -1,8 +1,9 @@
 -- Brainrot Lagoon — client HUD.
--- A ScreenGui over the 3D world: cash and income up top, the tsunami countdown banner,
--- Slap / Lock / Rebirth / Shop buttons on the right, the character catalog, the upgrade
--- shop, and toast notifications for everything the server tells you. The player still
--- moves with WASD and the camera in 3D; this is only the interface over that world.
+-- A ScreenGui over the 3D world: cash and income up top, the tsunami countdown
+-- banner, Slap / Lock / Rebirth / Shop buttons on the right, the character
+-- catalog, the upgrade shop, and toast notifications for everything the server
+-- tells you. The player still moves with WASD and the camera in 3D; this is
+-- only the interface over that world.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -27,12 +28,21 @@ gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.Parent = playerGui
 
+local PANEL = Color3.fromRGB(20, 20, 30)
+local WHITE = Color3.fromRGB(255, 255, 255)
+
+local function roundCorners(parent: Instance, radius: number)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius)
+	corner.Parent = parent
+end
+
 local function makeLabel(parent, name, position, size, text, textSize, color, font)
 	local label = Instance.new("TextLabel")
 	label.Name = name
 	label.Position = position
 	label.Size = size
-	label.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+	label.BackgroundColor3 = PANEL
 	label.BackgroundTransparency = 0.25
 	label.BorderSizePixel = 0
 	label.Text = text
@@ -41,9 +51,7 @@ local function makeLabel(parent, name, position, size, text, textSize, color, fo
 	label.Font = font or Enum.Font.SourceSansBold
 	label.TextStrokeTransparency = 0.3
 	label.Parent = parent
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = label
+	roundCorners(label, 8)
 	return label
 end
 
@@ -56,17 +64,16 @@ local function makeButton(parent, name, position, size, text, color)
 	button.BorderSizePixel = 0
 	button.Text = text
 	button.TextSize = 20
-	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.TextColor3 = WHITE
 	button.Font = Enum.Font.SourceSansBold
 	button.TextStrokeTransparency = 0.3
 	button.Parent = parent
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 10)
-	corner.Parent = button
+	roundCorners(button, 10)
 	return button
 end
 
--- Top bar: cash, income per second, rebirths. Centred, clear of the Roblox menu buttons.
+-- Top bar: cash, income per second, rebirths. Centred, clear of the Roblox
+-- menu buttons.
 local topBar = Instance.new("Frame")
 topBar.Name = "TopBar"
 topBar.AnchorPoint = Vector2.new(0.5, 0)
@@ -89,7 +96,7 @@ waveBanner.BackgroundTransparency = 0.45
 
 -- Carried indicator: what you are holding and where it needs to go.
 local carryLabel = makeLabel(gui, "CarryLabel", UDim2.new(0.5, -200, 1, -120), UDim2.fromOffset(400, 40),
-	"", 20, Color3.fromRGB(255, 255, 255))
+	"", 20, WHITE)
 carryLabel.Visible = false
 
 -- Right-hand action buttons.
@@ -120,12 +127,10 @@ shopPanel.BackgroundColor3 = Color3.fromRGB(24, 24, 36)
 shopPanel.BorderSizePixel = 0
 shopPanel.Visible = false
 shopPanel.Parent = gui
-local shopCorner = Instance.new("UICorner")
-shopCorner.CornerRadius = UDim.new(0, 12)
-shopCorner.Parent = shopPanel
+roundCorners(shopPanel, 12)
 
 local shopTitle = makeLabel(shopPanel, "ShopTitle", UDim2.fromOffset(16, 12), UDim2.fromOffset(528, 40),
-	"WEIRDO CATALOG — buy them on the conveyor, place them on your base", 18, Color3.fromRGB(255, 255, 255))
+	"WEIRDO CATALOG — buy them on the conveyor, place them on your base", 18, WHITE)
 shopTitle.BackgroundTransparency = 1
 
 local catalogList = Instance.new("ScrollingFrame")
@@ -140,6 +145,7 @@ local listLayout = Instance.new("UIListLayout")
 listLayout.Padding = UDim.new(0, 4)
 listLayout.Parent = catalogList
 
+-- One row per character: name in its rarity colour, $/s, buy cost.
 for _, entry in ipairs(BrainrotCatalog.CHARACTERS) do
 	local rarity = BrainrotCatalog.RARITIES[entry.rarity]
 	local row = Instance.new("Frame")
@@ -148,44 +154,30 @@ for _, entry in ipairs(BrainrotCatalog.CHARACTERS) do
 	row.BackgroundColor3 = Color3.fromRGB(40, 40, 56)
 	row.BorderSizePixel = 0
 	row.Parent = catalogList
-	local rowCorner = Instance.new("UICorner")
-	rowCorner.CornerRadius = UDim.new(0, 8)
-	rowCorner.Parent = row
-	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Position = UDim2.fromOffset(10, 0)
-	nameLabel.Size = UDim2.fromOffset(230, 42)
-	nameLabel.BackgroundTransparency = 1
-	nameLabel.Text = entry.name
-	nameLabel.TextColor3 = rarity.color
-	nameLabel.TextSize = 18
-	nameLabel.Font = Enum.Font.SourceSansBold
-	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-	nameLabel.Parent = row
-	local rateLabel = Instance.new("TextLabel")
-	rateLabel.Position = UDim2.fromOffset(250, 0)
-	rateLabel.Size = UDim2.fromOffset(120, 42)
-	rateLabel.BackgroundTransparency = 1
-	rateLabel.Text = BrainrotCatalog.formatMoney(entry.rate) .. "/s"
-	rateLabel.TextColor3 = Color3.fromRGB(120, 255, 130)
-	rateLabel.TextSize = 18
-	rateLabel.Font = Enum.Font.SourceSansBold
-	rateLabel.Parent = row
-	local costLabel = Instance.new("TextLabel")
-	costLabel.Position = UDim2.fromOffset(380, 0)
-	costLabel.Size = UDim2.fromOffset(120, 42)
-	costLabel.BackgroundTransparency = 1
-	costLabel.Text = BrainrotCatalog.formatMoney(entry.cost)
-	costLabel.TextColor3 = Color3.fromRGB(255, 230, 120)
-	costLabel.TextSize = 18
-	costLabel.Font = Enum.Font.SourceSansBold
-	costLabel.Parent = row
+	roundCorners(row, 8)
+
+	local function cell(x: number, width: number, text: string, color: Color3)
+		local label = Instance.new("TextLabel")
+		label.Position = UDim2.fromOffset(x, 0)
+		label.Size = UDim2.fromOffset(width, 42)
+		label.BackgroundTransparency = 1
+		label.Text = text
+		label.TextColor3 = color
+		label.TextSize = 18
+		label.Font = Enum.Font.SourceSansBold
+		label.Parent = row
+		return label
+	end
+	local nameCell = cell(10, 230, entry.name, rarity.color)
+	nameCell.TextXAlignment = Enum.TextXAlignment.Left
+	cell(250, 120, BrainrotCatalog.formatMoney(entry.rate) .. "/s", Color3.fromRGB(120, 255, 130))
+	cell(380, 120, BrainrotCatalog.formatMoney(entry.cost), Color3.fromRGB(255, 230, 120))
 end
 
 local upgradesTitle = makeLabel(shopPanel, "UpgradesTitle", UDim2.fromOffset(16, 322), UDim2.fromOffset(528, 30),
-	"UPGRADES — spend cash, keep them forever", 18, Color3.fromRGB(255, 255, 255))
+	"UPGRADES — spend cash, keep them forever", 18, WHITE)
 upgradesTitle.BackgroundTransparency = 1
 
-local upgradeButtons = {}
 local upgradeY = 358
 for id, upgrade in pairs(GameConfig.UPGRADES) do
 	local button = makeButton(shopPanel, "Upgrade_" .. id, UDim2.fromOffset(16, upgradeY), UDim2.fromOffset(528, 34),
@@ -195,7 +187,6 @@ for id, upgrade in pairs(GameConfig.UPGRADES) do
 	button.MouseButton1Click:Connect(function()
 		buyUpgradeRemote:FireServer(id)
 	end)
-	upgradeButtons[id] = button
 	upgradeY += 40
 end
 
@@ -211,17 +202,15 @@ toastArea.Parent = gui
 local function showToast(text: string)
 	local toast = Instance.new("TextLabel")
 	toast.Size = UDim2.fromOffset(560, 34)
-	toast.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+	toast.BackgroundColor3 = PANEL
 	toast.BackgroundTransparency = 0.15
 	toast.BorderSizePixel = 0
 	toast.Text = text
 	toast.TextSize = 18
-	toast.TextColor3 = Color3.fromRGB(255, 255, 255)
+	toast.TextColor3 = WHITE
 	toast.Font = Enum.Font.SourceSansBold
 	toast.Parent = toastArea
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = toast
+	roundCorners(toast, 8)
 	-- Stack: older toasts rise.
 	for _, child in ipairs(toastArea:GetChildren()) do
 		if child:IsA("TextLabel") and child ~= toast then
@@ -268,7 +257,7 @@ local cashValue = leaderstats:WaitForChild("Cash") :: IntValue
 local incomeValue = leaderstats:WaitForChild("Income") :: IntValue
 local rebirthsValue = leaderstats:WaitForChild("Rebirths") :: IntValue
 local waveCountdown = gameState:WaitForChild("WaveCountdown") :: IntValue
-local waveState = gameState:WaitForChild("WaveState") :: StringValue
+local wavePhase = gameState:WaitForChild("WaveState") :: StringValue
 
 local function refreshMoney()
 	cashLabel.Text = BrainrotCatalog.formatMoney(cashValue.Value)
@@ -278,18 +267,18 @@ local function refreshMoney()
 end
 
 local function refreshWave()
-	local state = waveState.Value
-	if state == "Warning" then
+	local phase = wavePhase.Value
+	if phase == "Warning" then
 		waveBanner.Text = "NOODLE TSUNAMI IN " .. waveCountdown.Value .. "s — RUN HOME!"
 		waveBanner.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
-		waveBanner.TextColor3 = Color3.fromRGB(255, 255, 255)
-	elseif state == "Wave" then
+		waveBanner.TextColor3 = WHITE
+	elseif phase == "Wave" then
 		waveBanner.Text = "THE NOODLE TSUNAMI IS HERE — STAY ON YOUR BASE!"
 		waveBanner.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
-		waveBanner.TextColor3 = Color3.fromRGB(255, 255, 255)
+		waveBanner.TextColor3 = WHITE
 	else
 		waveBanner.Text = "Noodle Tsunami in " .. waveCountdown.Value .. "s"
-		waveBanner.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+		waveBanner.BackgroundColor3 = PANEL
 		waveBanner.TextColor3 = Color3.fromRGB(140, 220, 255)
 	end
 end
@@ -308,7 +297,7 @@ cashValue:GetPropertyChangedSignal("Value"):Connect(refreshMoney)
 incomeValue:GetPropertyChangedSignal("Value"):Connect(refreshMoney)
 rebirthsValue:GetPropertyChangedSignal("Value"):Connect(refreshMoney)
 waveCountdown:GetPropertyChangedSignal("Value"):Connect(refreshWave)
-waveState:GetPropertyChangedSignal("Value"):Connect(refreshWave)
+wavePhase:GetPropertyChangedSignal("Value"):Connect(refreshWave)
 player:GetAttributeChangedSignal("Carrying"):Connect(refreshCarrying)
 
 refreshMoney()
