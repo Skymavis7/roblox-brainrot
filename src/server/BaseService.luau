@@ -1,20 +1,20 @@
--- BaseService: the six player bases — claiming, slots, locking, placement.
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- BaseService: the six player bases — claiming, slots, placing, locking.
 
-local Config = require(ReplicatedStorage.Shared.GameConfig)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local PlayerData = require(script.Parent.PlayerData)
 
 local BaseService = {}
 
-local owners = {} -- base index -> player (or nil)
-local folders = {} -- base index -> Model folder in Workspace
+local owners = { nil, nil, nil, nil, nil, nil }
+local folders = {}
 
 function BaseService.registerBaseFolder(index, folder)
 	folders[index] = folder
 end
 
 function BaseService.assignBase(state)
-	for index = 1, #Config.BASES do
+	for index = 1, 6 do
 		if owners[index] == nil then
 			owners[index] = state.player
 			state.baseIndex = index
@@ -34,32 +34,26 @@ function BaseService.releaseBase(state)
 	local folder = folders[index]
 	if folder then
 		for _, child in ipairs(folder:GetChildren()) do
-			if child:IsA("Model") then
-				child:Destroy()
-			end
+			child:Destroy()
 		end
 	end
 end
 
--- Where a brainrot stands on a base: the plot centre plus its slot offset.
 function BaseService.slotPosition(baseIndex, slot, slotCount)
-	local plot = Config.BASES[baseIndex]
-	local offsets = Config.SLOT_OFFSETS
-	if slotCount > Config.BASE_SLOT_COUNT then
-		offsets = Config.SLOT_OFFSETS_UPGRADED
+	local base = GameConfig.BASES[baseIndex]
+	local offsets = GameConfig.SLOT_OFFSETS
+	if slotCount > GameConfig.BASE_SLOT_COUNT then
+		offsets = GameConfig.SLOT_OFFSETS_UPGRADED
 	end
-	local offset = offsets[slot] or Vector3.zero
-	return Vector3.new(plot.center.X + offset.X, 0.5, plot.center.Z + offset.Z)
+	local offset = offsets[slot] or Vector3.new(0, 0, 0)
+	return base.center + offset + Vector3.new(0, 0.5, 0)
 end
 
 function BaseService.isInsideBase(baseIndex, position)
-	if not baseIndex or not Config.BASES[baseIndex] then
-		return false
-	end
-	local plot = Config.BASES[baseIndex]
-	local half = Config.BASE_SIZE / 2
-	return math.abs(position.X - plot.center.X) <= half
-		and math.abs(position.Z - plot.center.Z) <= half
+	local base = GameConfig.BASES[baseIndex]
+	local half = GameConfig.BASE_SIZE / 2
+	return math.abs(position.X - base.center.X) <= half
+		and math.abs(position.Z - base.center.Z) <= half
 end
 
 function BaseService.placeOnBase(state, model)
@@ -70,11 +64,14 @@ function BaseService.placeOnBase(state, model)
 	if not slot then
 		return false
 	end
-	local spot = BaseService.slotPosition(state.baseIndex, slot, state.slotCount)
 	model:SetAttribute("State", "Placed")
 	model:SetAttribute("OwnerId", state.player.UserId)
 	model:SetAttribute("Slot", slot)
-	model:PivotTo(CFrame.new(spot))
+	local target = BaseService.slotPosition(state.baseIndex, slot, state.slotCount)
+	local primary = model.PrimaryPart
+	if primary then
+		model:PivotTo(CFrame.new(target))
+	end
 	local folder = folders[state.baseIndex]
 	if folder then
 		model.Parent = folder
@@ -87,7 +84,7 @@ end
 
 function BaseService.removeFromBase(state, model)
 	local slot = model:GetAttribute("Slot")
-	if type(slot) == "number" and state.placed[slot] == model then
+	if typeof(slot) == "number" and state.placed[slot] == model then
 		state.placed[slot] = nil
 		PlayerData.refreshBrainrotCount(state)
 	end
@@ -98,8 +95,8 @@ function BaseService.lockBase(state)
 	if now < state.lockCooldownUntil then
 		return false
 	end
-	state.lockUntil = now + Config.LOCK_DURATION
-	state.lockCooldownUntil = now + Config.LOCK_COOLDOWN
+	state.lockUntil = now + GameConfig.LOCK_DURATION
+	state.lockCooldownUntil = now + GameConfig.LOCK_COOLDOWN
 	return true
 end
 

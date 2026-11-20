@@ -1,178 +1,124 @@
--- BrainrotFactory: builds the 3D model of one brainrot from a catalog entry
--- and a mutation, standing at a position.
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- BrainrotFactory: build the 3D model of one brainrot from a catalog entry
+-- and a mutation, at a position. Body, googly eyes, feet, accessory, label.
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Catalog = require(ReplicatedStorage.Shared.BrainrotCatalog)
 
 local BrainrotFactory = {}
 
-local function makePart(name, size, color, position, shape, material, transparency)
-	local part = Instance.new("Part")
-	part.Name = name
-	part.Size = size
-	part.Color = color
-	part.Position = position
-	part.Shape = shape or Enum.PartType.Block
-	part.Material = material or Enum.Material.SmoothPlastic
-	part.Transparency = transparency or 0
-	part.Anchored = true
-	part.CanCollide = false
-	return part
-end
-
-local function rarityColor(rarityName)
-	for _, rarity in ipairs(Catalog.RARITIES) do
-		if rarity.name == rarityName then
-			return rarity.color
-		end
+local function part(name, size, color, position, shape)
+	local p = Instance.new("Part")
+	p.Name = name
+	p.Size = size
+	p.Color = color
+	p.Position = position
+	p.Material = Enum.Material.SmoothPlastic
+	p.Anchored = true
+	p.CanCollide = false
+	if shape == "Ball" then
+		p.Shape = Enum.PartType.Ball
+	elseif shape == "Cylinder" then
+		p.Shape = Enum.PartType.Cylinder
 	end
-	return Color3.fromRGB(255, 255, 255)
+	return p
 end
 
--- entry: a catalog character; mutation: a mutation row; at: ground position.
 function BrainrotFactory.build(entry, mutation, at)
 	local rate = entry.rate * mutation.multiplier
 	local model = Instance.new("Model")
 	model.Name = entry.name
 
-	local bodyPos = at + Vector3.new(0, 1.6, 0)
-	local bodyShape = Enum.PartType.Block
-	if entry.shape == "Ball" then
-		bodyShape = Enum.PartType.Ball
-	elseif entry.shape == "Cylinder" then
-		bodyShape = Enum.PartType.Cylinder
-	end
-	local body = makePart("Body", Vector3.new(3, 3, 3), entry.color, bodyPos, bodyShape)
-	model.PrimaryPart = body
-	body.Parent = model
-
-	-- Mutation re-skins the body.
+	local bodyColor = entry.color
+	local bodyMaterial = Enum.Material.SmoothPlastic
+	local bodyTransparency = 0
 	if mutation.name == "Golden" then
-		body.Material = Enum.Material.Neon
-		body.Color = Color3.fromRGB(255, 215, 0)
+		bodyMaterial = Enum.Material.Neon
+		bodyColor = Color3.fromRGB(255, 215, 0)
 	elseif mutation.name == "Frozen" then
-		body.Material = Enum.Material.Glass
-		body.Transparency = 0.25
+		bodyMaterial = Enum.Material.Glass
+		bodyTransparency = 0.25
 	elseif mutation.name == "Rainbow" then
-		body.Material = Enum.Material.Neon
+		bodyMaterial = Enum.Material.Neon
 	end
 
-	-- Googly eyes on the front (-Z) face.
+	local body = part("Body", Vector3.new(3, 3, 3), bodyColor, at + Vector3.new(0, 1.6, 0), entry.shape)
+	body.Material = bodyMaterial
+	body.Transparency = bodyTransparency
+	body.Parent = model
+	model.PrimaryPart = body
+
+	local bodyPos = body.Position
 	for _, side in ipairs({ -0.7, 0.7 }) do
-		local white = makePart(
-			"EyeWhite",
-			Vector3.new(0.7, 0.7, 0.4),
-			Color3.fromRGB(255, 255, 255),
-			bodyPos + Vector3.new(side, 0.4, -1.5),
-			Enum.PartType.Ball
-		)
-		white.Parent = model
-		local pupil = makePart(
-			"Pupil",
-			Vector3.new(0.32, 0.32, 0.2),
-			Color3.fromRGB(20, 20, 25),
-			bodyPos + Vector3.new(side, 0.4, -1.75),
-			Enum.PartType.Ball
-		)
+		local eye = part("Eye", Vector3.new(0.7, 0.7, 0.4), Color3.fromRGB(255, 255, 255), bodyPos + Vector3.new(side, 0.4, -1.5), "Ball")
+		eye.Parent = model
+		local pupil = part("Pupil", Vector3.new(0.32, 0.32, 0.2), Color3.fromRGB(20, 20, 20), bodyPos + Vector3.new(side, 0.4, -1.7), "Ball")
 		pupil.Parent = model
 	end
 
-	-- Little dark feet.
 	for _, side in ipairs({ -0.7, 0.7 }) do
-		local foot = makePart(
-			"Foot",
-			Vector3.new(0.8, 0.5, 1.2),
-			Color3.fromRGB(40, 40, 45),
-			bodyPos + Vector3.new(side, -1.6, 0)
-		)
+		local foot = part("Foot", Vector3.new(0.8, 0.5, 1.2), Color3.fromRGB(40, 40, 45), bodyPos + Vector3.new(side, -1.6, 0), "Box")
 		foot.Parent = model
 	end
 
-	-- Accessory. "top" here is the body centre; offsets stack above the head.
-	local top = bodyPos
+	local top = bodyPos + Vector3.new(0, 1.6, 0)
 	if entry.accessory == "hat" then
-		local brim = makePart("HatBrim", Vector3.new(3.4, 0.5, 3.4), Color3.fromRGB(40, 40, 45), top + Vector3.new(0, 1.7, 0))
+		local brim = part("HatBrim", Vector3.new(3.4, 0.5, 3.4), Color3.fromRGB(40, 40, 50), top + Vector3.new(0, 0.1, 0), "Box")
 		brim.Parent = model
-		local crown = makePart("HatTop", Vector3.new(1.8, 1.2, 1.8), Color3.fromRGB(40, 40, 45), top + Vector3.new(0, 2.4, 0))
+		local crown = part("HatTop", Vector3.new(1.8, 1.2, 1.8), Color3.fromRGB(40, 40, 50), top + Vector3.new(0, 0.8, 0), "Box")
 		crown.Parent = model
 	elseif entry.accessory == "crown" then
-		local band = makePart(
-			"Crown",
-			Vector3.new(2.6, 0.9, 2.6),
-			Color3.fromRGB(255, 215, 0),
-			top + Vector3.new(0, 1.8, 0),
-			Enum.PartType.Block,
-			Enum.Material.Neon
-		)
+		local band = part("Crown", Vector3.new(2.6, 0.9, 2.6), Color3.fromRGB(255, 215, 0), top + Vector3.new(0, 0.2, 0), "Box")
+		band.Material = Enum.Material.Neon
 		band.Parent = model
 	elseif entry.accessory == "antenna" then
-		local stick = makePart("Antenna", Vector3.new(0.25, 1.6, 0.25), Color3.fromRGB(40, 40, 45), top + Vector3.new(0, 2.2, 0))
+		local stick = part("Antenna", Vector3.new(0.25, 1.6, 0.25), Color3.fromRGB(60, 60, 70), top + Vector3.new(0, 0.6, 0), "Box")
 		stick.Parent = model
-		local bulb = makePart(
-			"AntennaBulb",
-			Vector3.new(0.7, 0.7, 0.7),
-			Color3.fromRGB(255, 60, 60),
-			top + Vector3.new(0, 3.1, 0),
-			Enum.PartType.Ball,
-			Enum.Material.Neon
-		)
+		local bulb = part("AntennaBulb", Vector3.new(0.7, 0.7, 0.7), Color3.fromRGB(255, 60, 60), top + Vector3.new(0, 1.5, 0), "Ball")
+		bulb.Material = Enum.Material.Neon
 		bulb.Parent = model
 	elseif entry.accessory == "wheels" then
-		for _, sx in ipairs({ -1.5, 1.5 }) do
-			for _, sz in ipairs({ -1.1, 1.1 }) do
-				local wheel = makePart(
-					"Wheel",
-					Vector3.new(0.5, 1, 1),
-					Color3.fromRGB(40, 40, 45),
-					top + Vector3.new(sx, -1.2, sz),
-					Enum.PartType.Cylinder
-				)
+		for _, wx in ipairs({ -1.5, 1.5 }) do
+			for _, wz in ipairs({ -1.1, 1.1 }) do
+				local wheel = part("Wheel", Vector3.new(0.5, 1, 1), Color3.fromRGB(30, 30, 35), top + Vector3.new(wx, -2.8, wz), "Cylinder")
 				wheel.Orientation = Vector3.new(0, 0, 90)
 				wheel.Parent = model
 			end
 		end
 	end
 
-	-- Name plate floating above the head.
 	local gui = Instance.new("BillboardGui")
-	gui.Name = "BrainrotLabel"
 	gui.Size = UDim2.fromOffset(140, 64)
 	gui.StudsOffsetWorldSpace = Vector3.new(0, 3.4, 0)
 	gui.AlwaysOnTop = true
-	gui.Adornee = body
 	gui.Parent = body
 
 	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Name = "Name"
-	nameLabel.Size = UDim2.new(1, 0, 0.4, 0)
-	nameLabel.Position = UDim2.new(0, 0, 0, 0)
+	nameLabel.Size = UDim2.new(1, 0, 0.34, 0)
 	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = entry.name
+	nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	nameLabel.Font = Enum.Font.FredokaOne
 	nameLabel.TextScaled = true
-	nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	nameLabel.Text = entry.name
 	nameLabel.Parent = gui
 
 	local rarityLabel = Instance.new("TextLabel")
-	rarityLabel.Name = "Rarity"
-	rarityLabel.Size = UDim2.new(1, 0, 0.3, 0)
-	rarityLabel.Position = UDim2.new(0, 0, 0.4, 0)
+	rarityLabel.Position = UDim2.new(0, 0, 0.34, 0)
+	rarityLabel.Size = UDim2.new(1, 0, 0.33, 0)
 	rarityLabel.BackgroundTransparency = 1
+	rarityLabel.Text = entry.rarity .. "  •  " .. mutation.name
+	rarityLabel.TextColor3 = Catalog.rarityColor(entry.rarity)
 	rarityLabel.Font = Enum.Font.SourceSansBold
 	rarityLabel.TextScaled = true
-	rarityLabel.TextColor3 = rarityColor(entry.rarity)
-	rarityLabel.Text = entry.rarity .. "  •  " .. mutation.name
 	rarityLabel.Parent = gui
 
 	local rateLabel = Instance.new("TextLabel")
-	rateLabel.Name = "Rate"
-	rateLabel.Size = UDim2.new(1, 0, 0.3, 0)
-	rateLabel.Position = UDim2.new(0, 0, 0.7, 0)
+	rateLabel.Position = UDim2.new(0, 0, 0.67, 0)
+	rateLabel.Size = UDim2.new(1, 0, 0.33, 0)
 	rateLabel.BackgroundTransparency = 1
+	rateLabel.Text = Catalog.formatMoney(rate) .. "/s"
+	rateLabel.TextColor3 = Color3.fromRGB(120, 255, 130)
 	rateLabel.Font = Enum.Font.SourceSansBold
 	rateLabel.TextScaled = true
-	rateLabel.TextColor3 = Color3.fromRGB(120, 255, 130)
-	rateLabel.Text = Catalog.formatMoney(rate) .. "/s"
 	rateLabel.Parent = gui
 
 	model:SetAttribute("BrainrotId", entry.id)

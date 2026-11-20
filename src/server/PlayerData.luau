@@ -1,42 +1,41 @@
--- PlayerData: one live state table per player, plus their leaderstats.
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- PlayerData: one live state table per player, plus the leaderstats mirror.
+-- Nothing here talks to the network; other services read and mutate states.
 
-local Config = require(ReplicatedStorage.Shared.GameConfig)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 
 local PlayerData = {}
-
 local states = {}
 
--- Build a fresh state and its leaderstats for a player who just joined.
 function PlayerData.create(player)
-	local board = Instance.new("Folder")
-	board.Name = "leaderstats"
-	board.Parent = player
+	local folder = Instance.new("Folder")
+	folder.Name = "leaderstats"
+	folder.Parent = player
 
 	local cash = Instance.new("IntValue")
 	cash.Name = "Cash"
-	cash.Value = Config.STARTING_CASH
-	cash.Parent = board
+	cash.Value = GameConfig.STARTING_CASH
+	cash.Parent = folder
 
 	local income = Instance.new("IntValue")
 	income.Name = "Income"
 	income.Value = 0
-	income.Parent = board
+	income.Parent = folder
 
 	local rebirths = Instance.new("IntValue")
 	rebirths.Name = "Rebirths"
 	rebirths.Value = 0
-	rebirths.Parent = board
+	rebirths.Parent = folder
 
 	local brainrots = Instance.new("IntValue")
 	brainrots.Name = "Brainrots"
 	brainrots.Value = 0
-	brainrots.Parent = board
+	brainrots.Parent = folder
 
 	local state = {
 		player = player,
 		baseIndex = nil,
-		cash = Config.STARTING_CASH,
+		cash = GameConfig.STARTING_CASH,
 		rebirths = 0,
 		incomeMultiplier = 1,
 		placed = {},
@@ -45,8 +44,8 @@ function PlayerData.create(player)
 		lockCooldownUntil = 0,
 		slapCooldownUntil = 0,
 		upgrades = { speed = false, income = false, slots = false },
-		slotCount = Config.BASE_SLOT_COUNT,
-		leaderstats = board,
+		slotCount = GameConfig.BASE_SLOT_COUNT,
+		leaderstats = folder,
 	}
 	states[player] = state
 	return state
@@ -70,9 +69,9 @@ function PlayerData.setCash(state, amount)
 		value = 0
 	end
 	state.cash = value
-	local board = state.leaderstats
-	if board then
-		local cashValue = board:FindFirstChild("Cash")
+	local folder = state.leaderstats
+	if folder then
+		local cashValue = folder:FindFirstChild("Cash")
 		if cashValue then
 			cashValue.Value = value
 		end
@@ -85,22 +84,22 @@ end
 
 function PlayerData.setRebirths(state, count)
 	state.rebirths = count
-	state.incomeMultiplier = 1 + Config.REBIRTH_MULTIPLIER_PER * count
-	local board = state.leaderstats
-	if board then
-		local value = board:FindFirstChild("Rebirths")
-		if value then
-			value.Value = count
+	state.incomeMultiplier = 1 + GameConfig.REBIRTH_MULTIPLIER_PER * count
+	local folder = state.leaderstats
+	if folder then
+		local rebirthValue = folder:FindFirstChild("Rebirths")
+		if rebirthValue then
+			rebirthValue.Value = count
 		end
 	end
 end
 
--- Dollars per second from every placed brainrot, with upgrades applied.
 function PlayerData.calculateIncome(state)
 	local total = 0
 	for _, model in pairs(state.placed) do
-		if model and model.Parent then
-			total += model:GetAttribute("Rate") or 0
+		local rate = model:GetAttribute("Rate")
+		if typeof(rate) == "number" then
+			total += rate
 		end
 	end
 	if state.upgrades.income then
@@ -118,13 +117,12 @@ function PlayerData.countPlaced(state)
 end
 
 function PlayerData.refreshBrainrotCount(state)
-	local board = state.leaderstats
-	if not board then
-		return
-	end
-	local value = board:FindFirstChild("Brainrots")
-	if value then
-		value.Value = PlayerData.countPlaced(state)
+	local folder = state.leaderstats
+	if folder then
+		local value = folder:FindFirstChild("Brainrots")
+		if value then
+			value.Value = PlayerData.countPlaced(state)
+		end
 	end
 end
 
@@ -142,7 +140,11 @@ function PlayerData.isBaseLocked(state)
 end
 
 function PlayerData.lockSecondsLeft(state)
-	return math.max(0, math.floor(state.lockUntil - os.clock()))
+	local left = state.lockUntil - os.clock()
+	if left <= 0 then
+		return 0
+	end
+	return math.floor(left)
 end
 
 return PlayerData

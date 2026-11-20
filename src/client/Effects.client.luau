@@ -1,15 +1,13 @@
--- Effects.client: client-side feedback only (the server decides everything).
--- Screen flashes and a camera shake when the tsunami warns or hits, and a
--- gold flash when the player's brainrot count goes up.
+-- Effects.client: screen flashes and camera shakes for the big moments.
+-- Client-side feedback only; the server decides everything.
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
 local gameState = ReplicatedStorage:WaitForChild("GameState")
-local wavePhase = gameState:WaitForChild("WaveState")
+local waveState = gameState:WaitForChild("WaveState")
 local leaderstats = player:WaitForChild("leaderstats")
 local brainrotsValue = leaderstats:WaitForChild("Brainrots")
 
@@ -28,49 +26,64 @@ flash.BackgroundTransparency = 1
 flash.BorderSizePixel = 0
 flash.Parent = gui
 
-local shakeUntil = 0
-local shakeStrength = 0
+local shaking = false
 
-local function flashPulse(color, targetTransparency, holdSeconds)
-	flash.BackgroundColor3 = color
-	local fadeIn = TweenService:Create(flash, TweenInfo.new(0.15), { BackgroundTransparency = targetTransparency })
-	fadeIn:Play()
-	fadeIn.Completed:Wait()
-	task.wait(holdSeconds)
-	local fadeOut = TweenService:Create(flash, TweenInfo.new(0.4), { BackgroundTransparency = 1 })
-	fadeOut:Play()
-end
-
-local function shake(strength, durationSeconds)
-	shakeStrength = strength
-	shakeUntil = os.clock() + durationSeconds
-end
-
--- Applied after the engine places the camera each frame, so it never drifts.
-RunService.RenderStepped:Connect(function()
-	if os.clock() < shakeUntil and camera then
-		local ox = (math.random() * 2 - 1) * 0.25 * shakeStrength
-		local oy = (math.random() * 2 - 1) * 0.25 * shakeStrength
-		camera.CFrame = camera.CFrame * CFrame.new(ox, oy, 0)
+local function shake(strength, duration)
+	if shaking then
+		return
 	end
-end)
+	shaking = true
+	local camera = workspace.CurrentCamera
+	local started = os.clock()
+	task.spawn(function()
+		while os.clock() - started < duration do
+			if camera then
+				local offset = Vector3.new(
+					(math.random() - 0.5) * strength,
+					(math.random() - 0.5) * strength,
+					0
+				)
+				camera.CFrame = camera.CFrame * CFrame.new(offset)
+			end
+			RunService.RenderStepped:Wait()
+		end
+		shaking = false
+	end)
+end
 
-wavePhase:GetPropertyChangedSignal("Value"):Connect(function()
-	local phase = wavePhase.Value
-	if phase == "Warning" then
-		task.spawn(flashPulse, Color3.fromRGB(255, 40, 40), 0.75, 0.4)
+local function flashPulse(color, target, hold)
+	flash.BackgroundColor3 = color
+	flash.BackgroundTransparency = 0
+	task.delay(hold, function()
+		flash.BackgroundTransparency = 1
+	end)
+	-- fade back out smoothly after the hold
+	task.spawn(function()
+		task.wait(hold)
+		local steps = 12
+		for step = 1, steps do
+			flash.BackgroundTransparency = target + (1 - target) * (step / steps)
+			task.wait(0.05)
+		end
+		flash.BackgroundTransparency = 1
+	end)
+end
+
+waveState.Changed:Connect(function()
+	local state = waveState.Value
+	if state == "Warning" then
+		flashPulse(Color3.fromRGB(255, 40, 40), 0.75, 0.4)
 		shake(0.6, 0.8)
-	elseif phase == "Wave" then
-		task.spawn(flashPulse, Color3.fromRGB(255, 120, 40), 0.85, 1.5)
+	elseif state == "Wave" then
+		flashPulse(Color3.fromRGB(255, 120, 40), 0.85, 1.5)
 		shake(1.2, 2.5)
 	end
 end)
 
-local lastCount = brainrotsValue.Value
-brainrotsValue:GetPropertyChangedSignal("Value"):Connect(function()
-	local now = brainrotsValue.Value
-	if now > lastCount then
-		task.spawn(flashPulse, Color3.fromRGB(255, 215, 0), 0.8, 0.3)
+local lastBrainrots = brainrotsValue.Value
+brainrotsValue.Changed:Connect(function()
+	if brainrotsValue.Value > lastBrainrots then
+		flashPulse(Color3.fromRGB(255, 215, 0), 0.8, 0.3)
 	end
-	lastCount = now
+	lastBrainrots = brainrotsValue.Value
 end)

@@ -1,5 +1,5 @@
--- BrainrotCatalog: every character, rarity and mutation in Brainrot Lagoon.
--- Shared by the server (spawning, income) and the client (the shop list).
+-- BrainrotCatalog: the 12 original characters, 6 rarities and 5 mutations.
+-- Pure data plus the two rolls and a money formatter. No Roblox services.
 
 local Catalog = {}
 
@@ -155,6 +155,15 @@ Catalog.CHARACTERS = {
 	},
 }
 
+local function rarityByName(name)
+	for _, rarity in ipairs(Catalog.RARITIES) do
+		if rarity.name == name then
+			return rarity
+		end
+	end
+	return Catalog.RARITIES[1]
+end
+
 function Catalog.getById(id)
 	for _, entry in ipairs(Catalog.CHARACTERS) do
 		if entry.id == id then
@@ -164,7 +173,6 @@ function Catalog.getById(id)
 	return nil
 end
 
--- Roll a rarity by weight, then a random character of that rarity.
 function Catalog.rollCharacter()
 	local total = 0
 	for _, rarity in ipairs(Catalog.RARITIES) do
@@ -191,7 +199,6 @@ function Catalog.rollCharacter()
 	return pool[math.random(1, #pool)]
 end
 
--- Roll a mutation by its chance out of 100.
 function Catalog.rollMutation()
 	local roll = math.random(1, 100)
 	local running = 0
@@ -204,14 +211,17 @@ function Catalog.rollMutation()
 	return Catalog.MUTATIONS[1]
 end
 
--- "$1,234" — rounded to the nearest whole dollar, thousands comma-grouped.
+function Catalog.rarityColor(name)
+	return rarityByName(name).color
+end
+
 function Catalog.formatMoney(amount)
 	local whole = math.floor(amount + 0.5)
 	local text = tostring(whole)
 	local grouped = ""
 	while #text > 3 do
 		grouped = "," .. string.sub(text, -3) .. grouped
-		text = string.sub(text, 1, #text - 3)
+		text = string.sub(text, 1, -4)
 	end
 	return "$" .. text .. grouped
 end

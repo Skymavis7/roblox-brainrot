@@ -1,10 +1,8 @@
--- DataService: cash, rebirths and upgrades persist in a DataStore between
--- sessions. In Studio without API access the store is nil and everything
--- silently does nothing.
-local DataStoreService = game:GetService("DataStoreService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- DataService: persist cash, rebirths and upgrades in a DataStore.
+-- In Studio without API access the store is nil and everything is a no-op.
 
-local Config = require(ReplicatedStorage.Shared.GameConfig)
+local DataStoreService = game:GetService("DataStoreService")
+local GameConfig = require(game:GetService("ReplicatedStorage").Shared.GameConfig)
 local PlayerData = require(script.Parent.PlayerData)
 
 local DataService = {}
@@ -20,7 +18,7 @@ do
 	end
 end
 
-local function saveKey(state)
+local function keyFor(state)
 	return "player_" .. state.player.UserId
 end
 
@@ -29,25 +27,25 @@ function DataService.loadSave(state)
 		return
 	end
 	local ok, data = pcall(function()
-		return store:GetAsync(saveKey(state))
+		return store:GetAsync(keyFor(state))
 	end)
-	if not ok or type(data) ~= "table" then
+	if not ok or typeof(data) ~= "table" then
 		return
 	end
-	if type(data.cash) == "number" then
+	if typeof(data.cash) == "number" then
 		PlayerData.setCash(state, data.cash)
 	end
-	if type(data.rebirths) == "number" then
+	if typeof(data.rebirths) == "number" then
 		PlayerData.setRebirths(state, data.rebirths)
 	end
-	if type(data.upgrades) == "table" then
-		for _, key in ipairs({ "speed", "income", "slots" }) do
-			if data.upgrades[key] == true then
-				state.upgrades[key] = true
+	if typeof(data.upgrades) == "table" then
+		for _, id in ipairs({ "speed", "income", "slots" }) do
+			if data.upgrades[id] == true then
+				state.upgrades[id] = true
 			end
 		end
 		if state.upgrades.slots then
-			state.slotCount = Config.BASE_SLOT_COUNT_UPGRADED
+			state.slotCount = GameConfig.BASE_SLOT_COUNT_UPGRADED
 		end
 	end
 end
@@ -56,17 +54,12 @@ function DataService.saveSave(state)
 	if not store then
 		return
 	end
-	local payload = {
-		cash = state.cash,
-		rebirths = state.rebirths,
-		upgrades = {
-			speed = state.upgrades.speed,
-			income = state.upgrades.income,
-			slots = state.upgrades.slots,
-		},
-	}
 	pcall(function()
-		store:SetAsync(saveKey(state), payload)
+		store:SetAsync(keyFor(state), {
+			cash = state.cash,
+			rebirths = state.rebirths,
+			upgrades = state.upgrades,
+		})
 	end)
 end
 

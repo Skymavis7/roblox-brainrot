@@ -1,10 +1,11 @@
--- init.server: bootstrap. Builds the shared folders and remotes, hands every
--- player a base and their save, then starts the world and all services.
+-- init.server: bootstrap. Build the shared state, remotes and base folders,
+-- wire player join/leave, then start every service.
+
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
-local Config = require(ReplicatedStorage.Shared.GameConfig)
+local GameConfig = require(ReplicatedStorage.Shared.GameConfig)
 local PlayerData = require(script.Parent.PlayerData)
 local BaseService = require(script.Parent.BaseService)
 local MoneyService = require(script.Parent.MoneyService)
@@ -15,96 +16,82 @@ local RebirthService = require(script.Parent.RebirthService)
 local DataService = require(script.Parent.DataService)
 local WorldBuilder = require(script.Parent.WorldBuilder)
 
--- Shared state the HUD reads.
-local gameState = Instance.new("Folder")
-gameState.Name = "GameState"
-gameState.Parent = ReplicatedStorage
+local gameStateFolder = Instance.new("Folder")
+gameStateFolder.Name = "GameState"
+gameStateFolder.Parent = ReplicatedStorage
 
 local waveCountdown = Instance.new("IntValue")
 waveCountdown.Name = "WaveCountdown"
-waveCountdown.Value = Config.WAVE_CYCLE_SECONDS
-waveCountdown.Parent = gameState
+waveCountdown.Value = GameConfig.WAVE_CYCLE_SECONDS
+waveCountdown.Parent = gameStateFolder
 
-local wavePhase = Instance.new("StringValue")
-wavePhase.Name = "WaveState"
-wavePhase.Value = "Calm"
-wavePhase.Parent = gameState
+local waveStateValue = Instance.new("StringValue")
+waveStateValue.Name = "WaveState"
+waveStateValue.Value = "Calm"
+waveStateValue.Parent = gameStateFolder
 
--- Remotes the client fires and the server answers on.
-local remotes = Instance.new("Folder")
-remotes.Name = "Remotes"
-remotes.Parent = ReplicatedStorage
+local remotesFolder = Instance.new("Folder")
+remotesFolder.Name = "Remotes"
+remotesFolder.Parent = ReplicatedStorage
 
-local remoteList = {}
+local remotes = {}
 for _, name in ipairs({ "Notify", "Slap", "Rebirth", "BuyUpgrade", "LockBase" }) do
 	local remote = Instance.new("RemoteEvent")
 	remote.Name = name
-	remote.Parent = remotes
-	remoteList[name] = remote
+	remote.Parent = remotesFolder
+	remotes[name] = remote
 end
 
--- One folder per base, holding the brainrots standing on it.
-for index = 1, #Config.BASES do
+for index = 1, 6 do
 	local folder = Instance.new("Model")
 	folder.Name = "Base" .. index .. "Brainrots"
 	folder.Parent = Workspace
 	BaseService.registerBaseFolder(index, folder)
 end
 
-local function notifyPlayer(player, message)
-	remoteList.Notify:FireClient(player, message)
-end
-
-local function setupPlayer(player)
+local function onPlayerAdded(player)
 	local state = PlayerData.create(player)
 	DataService.loadSave(state)
 	local baseIndex = BaseService.assignBase(state)
 	if baseIndex then
-		notifyPlayer(player, "Welcome to Brainrot Lagoon! Your base is BASE " .. baseIndex .. ".")
+		remotes.Notify:FireClient(player, "Welcome to Brainrot Lagoon! Your base is BASE " .. baseIndex .. ".")
 	else
-		notifyPlayer(player, "Welcome! All bases are taken — spectate and steal nothing... yet.")
+		remotes.Notify:FireClient(player, "Welcome! All bases are taken — spectate and steal nothing... yet.")
 	end
-
-	local function applySpeed(character)
-		local humanoid = character:FindFirstChildOfClass("Humanoid")
-		if humanoid and state.upgrades.speed then
+	player.CharacterAdded:Connect(function(character)
+		local humanoid = character:WaitForChild("Humanoid")
+		if state.upgrades.speed then
 			humanoid.WalkSpeed = 24
 		end
-	end
-	player.CharacterAdded:Connect(applySpeed)
-	if player.Character then
-		applySpeed(player.Character)
-	end
+	end)
 end
 
-local function removePlayer(player)
+local function onPlayerRemoving(player)
 	local state = PlayerData.get(player)
-	if not state then
-		return
+	if state then
+		ConveyorService.dropCarried(player, state, false)
+		BaseService.releaseBase(state)
+		DataService.saveSave(state)
+		PlayerData.remove(player)
 	end
-	ConveyorService.dropCarried(player, state, false)
-	BaseService.releaseBase(state)
-	DataService.saveSave(state)
-	PlayerData.remove(player)
 end
 
-Players.PlayerAdded:Connect(setupPlayer)
-Players.PlayerRemoving:Connect(removePlayer)
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(onPlayerRemoving)
 for _, player in ipairs(Players:GetPlayers()) do
-	setupPlayer(player)
+	task.spawn(onPlayerAdded, player)
 end
 
 WorldBuilder.build()
-
-ConveyorService.start(remoteList)
-StealService.start(remoteList)
+ConveyorService.start(remotes)
+StealService.start(remotes)
 WaveService.start({
-	countdown = waveCountdown,
-	phase = wavePhase,
-	wall = Workspace:WaitForChild("WaveWall"),
-	notify = remoteList.Notify,
+	gameState = gameStateFolder,
+	notify = remotes.Notify,
+	waveCountdown = waveCountdown,
+	waveState = waveStateValue,
 })
-RebirthService.start(remoteList)
+RebirthService.start(remotes)
 MoneyService.start()
 
-print("[Brainrot Lagoon] ready — " .. Config.GAME_NAME .. " is live.")
+print("[Brainrot Lagoon] ready — " .. GameConfig.GAME_NAME .. " is live.")

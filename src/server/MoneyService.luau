@@ -1,4 +1,5 @@
--- MoneyService: pays every player one second of income, every second.
+-- MoneyService: pay every player one second of income, once a second.
+
 local PlayerData = require(script.Parent.PlayerData)
 
 local MoneyService = {}
@@ -6,11 +7,11 @@ local MoneyService = {}
 function MoneyService.payIncomeTick()
 	for _, state in pairs(PlayerData.all()) do
 		local income = PlayerData.calculateIncome(state)
-		local board = state.leaderstats
-		if board then
-			local value = board:FindFirstChild("Income")
-			if value then
-				value.Value = math.floor(income)
+		local folder = state.leaderstats
+		if folder then
+			local incomeValue = folder:FindFirstChild("Income")
+			if incomeValue then
+				incomeValue.Value = math.floor(income)
 			end
 		end
 		if income > 0 then

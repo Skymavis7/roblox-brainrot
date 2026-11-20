@@ -1,64 +1,65 @@
-// Brainrot Lagoon — make.fun entrypoint (Node 22, stdlib only).
-// Copies the built place, the Luau sources, the screenshots and PLAY.json
-// into the output directory, then writes dossier.json with the vendored
-// makefun-roblox library. Run from the repo root after building:
+// main.ts — entrypoint for Brainrot Lagoon (make.fun roblox-brainrot-01).
+// Copies the built place, the sources, the screenshots and PLAY.json into the
+// output directory, then writes dossier.json there with the vendored library.
+//
+// What the dossier holds (makefun/dossier/v1): a `cover` summary of the
+// place (instance counts, top classes, script list), the `text` of every
+// counted source file joined in one capped blob, and the `images` (the
+// screenshots, base64). The output directory mirrors the entry layout:
+// game.rbxl, PLAY.json, src/ (the 15 Luau sources), screenshots/ (up to 4),
+// and dossier.json itself. Nothing dotted is copied: a dotted name under
+// /output fails the entry, so copyTree skips dot-prefixed entries.
+//
+// Build first:
 //   node tools/gen-project.mjs && rojo build default.project.json --output game.rbxl
+// Run:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
 import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildDossier } from "./vendor/makefun-roblox.ts";
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-const root = process.cwd();
-
-function isHidden(name: string): boolean {
-  return name.startsWith(".");
-}
-
-// Copy one file or directory, skipping anything whose name starts with a dot
-// (a dotted name under /output fails the entry).
-function copyInto(source: string, target: string): void {
-  const info = statSync(source);
-  if (info.isDirectory()) {
-    mkdirSync(target, { recursive: true });
-    for (const entry of readdirSync(source)) {
-      if (isHidden(entry)) continue;
-      copyInto(join(source, entry), join(target, entry));
-    }
-    return;
-  }
-  cpSync(source, target);
-}
-
-function mustExist(path: string): void {
-  if (!existsSync(path)) {
-    throw new Error(`main.ts: missing required file ${path} — build first`);
-  }
-}
-
+const outDir = process.env.MAKEFUN_OUTPUT_DIR || "/output";
 mkdirSync(outDir, { recursive: true });
 
-mustExist(join(root, "game.rbxl"));
-mustExist(join(root, "PLAY.json"));
-mustExist(join(root, "src"));
+const dotted = (name: string) => name.startsWith(".");
 
-copyInto(join(root, "game.rbxl"), join(outDir, "game.rbxl"));
-copyInto(join(root, "PLAY.json"), join(outDir, "PLAY.json"));
-copyInto(join(root, "src"), join(outDir, "src"));
+// Copy game.rbxl and PLAY.json.
+for (const file of ["game.rbxl", "PLAY.json"]) {
+	if (existsSync(file)) {
+		cpSync(file, join(outDir, file));
+	}
+}
 
-const shots = join(root, "screenshots");
-if (existsSync(shots)) {
-  copyInto(shots, join(outDir, "screenshots"));
+// Copy a directory tree recursively, skipping dotted names.
+function copyTree(src: string, dest: string): void {
+	mkdirSync(dest, { recursive: true });
+	for (const entry of readdirSync(src)) {
+		if (dotted(entry)) {
+			continue;
+		}
+		const from = join(src, entry);
+		const to = join(dest, entry);
+		if (statSync(from).isDirectory()) {
+			copyTree(from, to);
+		} else {
+			cpSync(from, to);
+		}
+	}
+}
+
+// Copy src/ and screenshots/ (when present).
+copyTree("src", join(outDir, "src"));
+if (existsSync("screenshots")) {
+	copyTree("screenshots", join(outDir, "screenshots"));
 }
 
 const dossier = buildDossier(outDir, {
-  text_max_bytes: 65536,
-  screenshots: { max: 4, max_bytes: 262144 },
-  max_instances: 500000,
-  scripts_max_source_bytes: 8388608,
-  scripts_max_path_chars: 1048576,
+	text_max_bytes: 65536,
+	screenshots: { max: 4, max_bytes: 262144 },
+	max_instances: 500000,
+	scripts_max_source_bytes: 8388608,
+	scripts_max_path_chars: 1048576,
 });
-
 writeFileSync(join(outDir, "dossier.json"), dossier);
-console.log(`dossier.json written: ${dossier.length} bytes`);
+console.log("wrote " + join(outDir, "dossier.json") + " (" + dossier.length + " bytes)");

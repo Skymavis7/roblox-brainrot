@@ -7,9 +7,10 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
 
 An entry for make.fun's **"Make the best AI Roblox brainrot game"** bounty
-(`roblox-brainrot-01`). A lagoon island full of absurd original meme
-characters — buy them off a conveyor, carry them home, and let them earn cash
-for you while you guard your base from thieves and outrun the Noodle Tsunami.
+([`roblox-brainrot-01`](https://make.fun/bounty/roblox-brainrot-01)). A lagoon
+island full of absurd original meme characters — buy them off a conveyor,
+carry them home, and let them earn cash for you while you guard your base
+from thieves and outrun the Noodle Tsunami.
 
 ## The cast
 
