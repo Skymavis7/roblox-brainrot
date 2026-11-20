@@ -1,6 +1,8 @@
 # Brainrot Lagoon — a 3D Roblox brainrot game
 
-![make.fun](https://img.shields.io/badge/make.fun-roblox--brainrot--01-blue)
+[![make.fun · roblox-brainrot-01](https://make.fun/badge/roblox-brainrot-01.svg)](https://make.fun/bounty/roblox-brainrot-01?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+[![rank](https://make.fun/badge/roblox-brainrot-01/Skymavis7/roblox-brainrot/rank.svg)](https://make.fun/bounty/roblox-brainrot-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
+[![reward](https://make.fun/badge/roblox-brainrot-01/Skymavis7/roblox-brainrot/reward.svg)](https://make.fun/bounty/roblox-brainrot-01?utm_source=github&utm_medium=readme&utm_campaign=roblox-brainrot-01)
 ![Roblox](https://img.shields.io/badge/Roblox-Luau-red)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
 
