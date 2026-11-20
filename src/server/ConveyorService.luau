@@ -1,61 +1,37 @@
--- ConveyorService — the weirdo conveyor. Brainrots spawn at the west dock,
--- stroll east along the middle of the map, and despawn at the far end. A
--- player buys one with its prompt; it then follows them home and hops onto a
--- free slot of their base. This is the heart of the collection loop: buy,
--- carry, place, earn.
-
-local RunService = game:GetService("RunService")
+-- ConveyorService: brainrots walk the conveyor, get bought, follow their
+-- owner home, and drop back when their owner leaves or is slapped.
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
-local BrainrotCatalog = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("BrainrotCatalog"))
-local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
-local BrainrotFactory = require(script.Parent:WaitForChild("BrainrotFactory"))
-local BaseService = require(script.Parent:WaitForChild("BaseService"))
-local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
+local Catalog = require(ReplicatedStorage.Shared.BrainrotCatalog)
+local Config = require(ReplicatedStorage.Shared.GameConfig)
+local PlayerData = require(script.Parent.PlayerData)
+local BaseService = require(script.Parent.BaseService)
+local BrainrotFactory = require(script.Parent.BrainrotFactory)
 
 local ConveyorService = {}
 
-local walking: { Model } = {}
-local trailing: { [Player]: Model } = {}
-local notifyRemote: RemoteEvent
-local brainrotFolder: Folder
+local walking = {} -- models strolling the conveyor, west to east
+local trailing = {} -- player -> model following them home
+local notifyRemote = nil
+local folder = nil
 
--- What a brainrot's prompt says depends on its state and who is looking:
--- walking ones offer a buy, placed ones offer a steal to anyone but the owner.
-local function updatePrompt(model: Model, viewer: Player?)
-	local prompt = model:FindFirstChildOfClass("ProximityPrompt")
-	if prompt == nil then
-		return
-	end
-	local state = model:GetAttribute("State")
-	if state == "Walking" then
-		prompt.ActionText = "Buy"
-		prompt.ObjectText = BrainrotCatalog.formatMoney(model:GetAttribute("Cost"))
-		prompt.Enabled = true
-	elseif state == "Placed" then
-		local ownerId = model:GetAttribute("OwnerId")
-		if viewer ~= nil and ownerId ~= viewer.UserId then
-			prompt.ActionText = "Steal"
-			prompt.ObjectText = model.Name
-			prompt.Enabled = true
-		else
-			prompt.Enabled = false
-		end
-	else
-		prompt.Enabled = false
+local function notify(player, message)
+	if notifyRemote then
+		notifyRemote:FireClient(player, message)
 	end
 end
 
--- Spawn one random brainrot at the west dock and set it walking east.
 function ConveyorService.spawnBrainrot()
-	if #walking >= GameConfig.CONVEYOR_MAX_WALKING then
+	if #walking >= Config.CONVEYOR_MAX_WALKING then
 		return
 	end
-	local entry = BrainrotCatalog.rollCharacter()
-	local mutation = BrainrotCatalog.rollMutation()
-	local model = BrainrotFactory.build(entry, mutation, GameConfig.CONVEYOR_START)
-	model.Parent = brainrotFolder
+	local entry = Catalog.rollCharacter()
+	local mutation = Catalog.rollMutation()
+	local model = BrainrotFactory.build(entry, mutation, Config.CONVEYOR_START)
+	model.Parent = folder
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "BrainrotPrompt"
@@ -63,50 +39,73 @@ function ConveyorService.spawnBrainrot()
 	prompt.MaxActivationDistance = 12
 	prompt.RequiresLineOfSight = false
 	prompt.ActionText = "Buy"
-	prompt.ObjectText = BrainrotCatalog.formatMoney(entry.cost)
+	prompt.ObjectText = Catalog.formatMoney(entry.cost)
 	prompt.Parent = model.PrimaryPart
-
-	-- Pressing the prompt buys it off the conveyor or steals it off a base.
 	prompt.Triggered:Connect(function(player)
 		ConveyorService.onPromptTriggered(player, model)
 	end)
-	-- The prompt's wording follows whoever is looking at it (buy vs steal).
-	prompt.PromptShown:Connect(function(viewer)
-		updatePrompt(model, viewer)
+	prompt.PromptShown:Connect(function(player)
+		ConveyorService.updatePrompt(model, player)
 	end)
 
 	table.insert(walking, model)
 end
 
--- A player pressed a brainrot's prompt: buy it off the conveyor, or steal it
--- off somebody's base. (StealService is required lazily here: it requires this
--- module back, so an eager require at the top would cycle.)
-function ConveyorService.onPromptTriggered(player: Player, model: Model)
+-- The prompt wording depends on the model's state and who is looking.
+function ConveyorService.updatePrompt(model, viewer)
+	local body = model.PrimaryPart
+	if not body then
+		return
+	end
+	local prompt = body:FindFirstChild("BrainrotPrompt")
+	if not prompt then
+		return
+	end
+	local state = model:GetAttribute("State")
+	if state == "Walking" then
+		prompt.ActionText = "Buy"
+		prompt.ObjectText = Catalog.formatMoney(model:GetAttribute("Cost") or 0)
+		prompt.Enabled = true
+	elseif state == "Placed" then
+		local ownerId = model:GetAttribute("OwnerId")
+		if viewer and ownerId == viewer.UserId then
+			prompt.Enabled = false
+		else
+			prompt.ActionText = "Steal"
+			prompt.ObjectText = model.Name
+			prompt.Enabled = true
+		end
+	else
+		prompt.Enabled = false
+	end
+end
+
+function ConveyorService.onPromptTriggered(player, model)
 	local state = PlayerData.get(player)
-	if state == nil then
+	if not state then
 		return
 	end
 	local modelState = model:GetAttribute("State")
 	if modelState == "Walking" then
 		ConveyorService.buyBrainrot(player, state, model)
 	elseif modelState == "Placed" then
-		local stealService = require(script.Parent:WaitForChild("StealService"))
-		stealService.trySteal(player, state, model)
+		-- Lazy require: StealService requires this module back.
+		local StealService = require(script.Parent.StealService)
+		StealService.trySteal(player, state, model)
 	end
 end
 
--- Buy a walking brainrot: pay the cost and it starts following you home.
-function ConveyorService.buyBrainrot(player: Player, state, model: Model)
-	if state.carried ~= nil then
-		notifyRemote:FireClient(player, "Carry one brainrot at a time! Place it on your base first.")
+function ConveyorService.buyBrainrot(player, state, model)
+	if state.carried then
+		notify(player, "Carry one brainrot at a time! Place it on your base first.")
 		return
 	end
 	local cost = model:GetAttribute("Cost")
-	if typeof(cost) ~= "number" or state.cash < cost then
-		notifyRemote:FireClient(player, "Not enough cash for " .. model.Name .. "!")
+	if type(cost) ~= "number" or state.cash < cost then
+		notify(player, "Not enough cash for " .. model.Name .. "!")
 		return
 	end
-	PlayerData.addCash(state, -cost)
+	PlayerData.setCash(state, state.cash - cost)
 	for i, other in ipairs(walking) do
 		if other == model then
 			table.remove(walking, i)
@@ -115,25 +114,22 @@ function ConveyorService.buyBrainrot(player: Player, state, model: Model)
 	end
 	model:SetAttribute("State", "Following")
 	model:SetAttribute("OwnerId", player.UserId)
-	model.Parent = brainrotFolder
 	trailing[player] = model
 	state.carried = model
 	player:SetAttribute("Carrying", model.Name)
-	updatePrompt(model, nil)
-	notifyRemote:FireClient(player, "You bought " .. model.Name .. "! Carry it home to your base!")
+	ConveyorService.updatePrompt(model, nil)
+	notify(player, "You bought " .. model.Name .. "! Carry it home to your base!")
 end
 
--- Register a model as trailing a player (used when a steal hands one over).
-function ConveyorService.registerFollower(player: Player, model: Model)
+function ConveyorService.registerFollower(player, model)
 	trailing[player] = model
 end
 
--- A carried brainrot is dropped — slapped, wave-caught, or its carrier left.
--- A stolen one runs back to its old base when there is room; a bought one
--- despawns. Nothing is dropped when there is nothing carried.
-function ConveyorService.dropCarried(player: Player, state, returnHome: boolean)
+-- Drop what a player carries. With returnHome, a stolen brainrot runs back
+-- to its real owner's base when it has a free slot; otherwise it is gone.
+function ConveyorService.dropCarried(player, state, returnHome)
 	local model = state.carried
-	if model == nil then
+	if not model then
 		return
 	end
 	state.carried = nil
@@ -141,78 +137,80 @@ function ConveyorService.dropCarried(player: Player, state, returnHome: boolean)
 	player:SetAttribute("Carrying", "")
 	if returnHome then
 		local homeId = model:GetAttribute("HomeOwnerId")
-		local homePlayer: Player? = nil
-		if typeof(homeId) == "number" then
-			for other in pairs(PlayerData.all()) do
-				if other.UserId == homeId then
-					homePlayer = other
-					break
+		if type(homeId) == "number" then
+			local homePlayer = Players:GetPlayerByUserId(homeId)
+			if homePlayer then
+				local homeState = PlayerData.get(homePlayer)
+				if homeState and homeState.baseIndex then
+					if BaseService.placeOnBase(homeState, model) then
+						notify(homePlayer, model.Name .. " ran back to your base!")
+						return
+					end
 				end
 			end
-		end
-		local homeState = homePlayer ~= nil and PlayerData.get(homePlayer) or nil
-		if homeState ~= nil and homeState.baseIndex ~= nil and PlayerData.firstFreeSlot(homeState) ~= nil then
-			BaseService.placeOnBase(homeState, model)
-			notifyRemote:FireClient(homePlayer, model.Name .. " ran back to your base!")
-			return
 		end
 	end
 	model:Destroy()
 end
 
--- Move every walking and trailing brainrot one step. Runs every heartbeat.
-function ConveyorService.stepBrainrots(dt: number)
+function ConveyorService.stepBrainrots(dt)
 	local now = os.clock()
-	-- Walking: east along the conveyor, with a little waddle.
+
+	-- Walkers: east along the belt, gentle waddle, off the end they vanish.
 	for i = #walking, 1, -1 do
 		local model = walking[i]
-		if model.Parent == nil then
+		if not model or not model.Parent then
 			table.remove(walking, i)
 		else
-			local primary = model.PrimaryPart
-			if primary ~= nil then
-				local pos = primary.Position
-				local nextX = pos.X + GameConfig.CONVEYOR_WALK_SPEED * dt
-				if nextX >= GameConfig.CONVEYOR_END.X then
-					model:Destroy()
-					table.remove(walking, i)
-				else
-					local bob = math.sin(now * 6 + pos.X) * 0.25
-					model:PivotTo(CFrame.new(nextX, GameConfig.CONVEYOR_START.Y + bob, pos.Z))
-				end
+			local pivot = model:GetPivot()
+			local nextX = pivot.Position.X + Config.CONVEYOR_WALK_SPEED * dt
+			if nextX >= Config.CONVEYOR_END.X then
+				model:Destroy()
+				table.remove(walking, i)
+			else
+				local waddle = math.sin(now * 6) * 0.25
+				model:PivotTo(
+					CFrame.new(nextX, pivot.Position.Y, Config.CONVEYOR_START.Z + waddle)
+						* CFrame.Angles(0, math.rad(-90), 0)
+				)
 			end
 		end
 	end
-	-- Trailing: follow behind their owner; hop onto the base when they arrive.
+
+	-- Followers: trail behind their owner, bobbing; home when they arrive.
 	for player, model in pairs(trailing) do
 		local state = PlayerData.get(player)
-		local character = player.Character
-		local root = character and character:FindFirstChild("HumanoidRootPart")
-		if state == nil or model.Parent == nil or root == nil then
-			if state ~= nil then
+		local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+		if not state or not model or not model.Parent or not root then
+			if state then
 				ConveyorService.dropCarried(player, state, true)
 			end
 			trailing[player] = nil
 		else
 			local target = root.Position - root.CFrame.LookVector * 4
-			local primary = model.PrimaryPart
-			if primary ~= nil then
-				local pos = primary.Position
-				local flat = target - pos
-				flat = Vector3.new(flat.X, 0, flat.Z)
-				local distance = flat.Magnitude
-				if distance > 1 then
-					local step = math.min(GameConfig.FOLLOW_SPEED * dt, distance)
-					local bob = math.sin(now * 8) * 0.3
-					model:PivotTo(CFrame.new(pos + flat.Unit * step + Vector3.new(0, bob, 0)))
-				end
-				-- Arrived at your own base with a free slot: place it, start earning.
-				if state.baseIndex ~= nil and BaseService.isInsideBase(state.baseIndex, root.Position) then
+			local pivot = model:GetPivot()
+			local pos = pivot.Position
+			local dx = target.X - pos.X
+			local dz = target.Z - pos.Z
+			local distance = math.sqrt(dx * dx + dz * dz)
+			local step = Config.CONVEYOR_FOLLOW_SPEED * dt
+			local nextX, nextZ = target.X, target.Z
+			if distance > step then
+				nextX = pos.X + (dx / distance) * step
+				nextZ = pos.Z + (dz / distance) * step
+			end
+			local bob = target.Y + math.sin(now * 8) * 0.3
+			model:PivotTo(CFrame.new(nextX, bob, nextZ) * root.CFrame.Rotation)
+
+			if state.baseIndex and BaseService.isInsideBase(state.baseIndex, root.Position) then
+				if PlayerData.firstFreeSlot(state) then
 					if BaseService.placeOnBase(state, model) then
 						trailing[player] = nil
 						state.carried = nil
-						notifyRemote:FireClient(player, model.Name .. " is on your base earning " ..
-							BrainrotCatalog.formatMoney(model:GetAttribute("Rate")) .. "/s!")
+						notify(
+							player,
+							model.Name .. " is on your base earning " .. (model:GetAttribute("Rate") or 0) .. "/s!"
+						)
 					end
 				end
 			end
@@ -220,32 +218,28 @@ function ConveyorService.stepBrainrots(dt: number)
 	end
 end
 
--- Spawn a few brainrots at once (the TOUR.json step for the conveyor shot).
-function ConveyorService.spawnForTour(count: number)
-	for _ = 1, math.min(count, 3) do
+-- The TOUR.json step: a few brainrots at once for the camera.
+function ConveyorService.spawnForTour(count)
+	local amount = math.min(count, 3)
+	for _ = 1, amount do
 		ConveyorService.spawnBrainrot()
 	end
 end
 
-function ConveyorService.start(remotes: { notify: RemoteEvent })
-	notifyRemote = remotes.notify
-	brainrotFolder = Instance.new("Folder")
-	brainrotFolder.Name = "Brainrots"
-	brainrotFolder.Parent = Workspace
-
+function ConveyorService.start(remotes)
+	notifyRemote = remotes.Notify
+	folder = Instance.new("Folder")
+	folder.Name = "Brainrots"
+	folder.Parent = Workspace
+	ConveyorService.spawnBrainrot()
+	ConveyorService.spawnBrainrot()
 	task.spawn(function()
 		while true do
-			task.wait(GameConfig.CONVEYOR_SPAWN_INTERVAL)
+			task.wait(Config.CONVEYOR_SPAWN_INTERVAL)
 			ConveyorService.spawnBrainrot()
 		end
 	end)
-	-- A couple of weirdos are already walking when the game starts.
-	ConveyorService.spawnBrainrot()
-	ConveyorService.spawnBrainrot()
-
-	RunService.Heartbeat:Connect(function(dt)
-		ConveyorService.stepBrainrots(dt)
-	end)
+	RunService.Heartbeat:Connect(ConveyorService.stepBrainrots)
 end
 
 return ConveyorService

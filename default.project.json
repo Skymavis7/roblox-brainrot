@@ -1,30 +1,36 @@
 {
-  "name": "brainrot-lagoon",
+  "name": "BrainrotLagoon",
   "tree": {
     "$className": "DataModel",
     "Players": {
+      "$className": "Players",
       "$properties": {
         "CharacterAutoLoads": true
       }
     },
     "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
       "Shared": {
         "$path": "src/shared"
       }
     },
     "ServerScriptService": {
+      "$className": "ServerScriptService",
       "Server": {
         "$path": "src/server"
       }
     },
     "StarterPlayer": {
+      "$className": "StarterPlayer",
       "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
         "Client": {
           "$path": "src/client"
         }
       }
     },
     "Workspace": {
+      "$className": "Workspace",
       "$properties": {
         "FilteringEnabled": true
       },
@@ -4418,6 +4424,122 @@
         "$properties": {
           "Anchored": true,
           "Position": [
+            -97.19656,
+            10.6,
+            -45.52725
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            72,
+            0
+          ]
+        }
+      },
+      "Palm1Leaf2": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -100.10344,
+            10.6,
+            -46.47176
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            144,
+            0
+          ]
+        }
+      },
+      "Palm1Leaf3": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -100.10344,
+            10.6,
+            -49.52824
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            216,
+            0
+          ]
+        }
+      },
+      "Palm1Leaf4": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -97.19656,
+            10.6,
+            -50.47275
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            288,
+            0
+          ]
+        }
+      },
+      "Palm1Leaf5": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
             -95.4,
             10.6,
             -48
@@ -4437,123 +4559,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
-            0
-          ]
-        }
-      },
-      "Palm1Leaf2": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -97.2,
-            10.6,
-            -45.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -72,
-            0
-          ]
-        }
-      },
-      "Palm1Leaf3": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -100.1,
-            10.6,
-            -46.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -144,
-            0
-          ]
-        }
-      },
-      "Palm1Leaf4": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -100.1,
-            10.6,
-            -49.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -216,
-            0
-          ]
-        }
-      },
-      "Palm1Leaf5": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -97.2,
-            10.6,
-            -50.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -288,
+            360,
             0
           ]
         }
@@ -4613,6 +4619,122 @@
         "$properties": {
           "Anchored": true,
           "Position": [
+            98.80344,
+            10.6,
+            -45.52725
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            72,
+            0
+          ]
+        }
+      },
+      "Palm2Leaf2": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            95.89656,
+            10.6,
+            -46.47176
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            144,
+            0
+          ]
+        }
+      },
+      "Palm2Leaf3": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            95.89656,
+            10.6,
+            -49.52824
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            216,
+            0
+          ]
+        }
+      },
+      "Palm2Leaf4": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            98.80344,
+            10.6,
+            -50.47275
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            288,
+            0
+          ]
+        }
+      },
+      "Palm2Leaf5": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
             100.6,
             10.6,
             -48
@@ -4632,123 +4754,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
-            0
-          ]
-        }
-      },
-      "Palm2Leaf2": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            98.8,
-            10.6,
-            -45.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -72,
-            0
-          ]
-        }
-      },
-      "Palm2Leaf3": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            95.9,
-            10.6,
-            -46.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -144,
-            0
-          ]
-        }
-      },
-      "Palm2Leaf4": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            95.9,
-            10.6,
-            -49.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -216,
-            0
-          ]
-        }
-      },
-      "Palm2Leaf5": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            98.8,
-            10.6,
-            -50.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -288,
+            360,
             0
           ]
         }
@@ -4808,6 +4814,122 @@
         "$properties": {
           "Anchored": true,
           "Position": [
+            -97.19656,
+            10.6,
+            50.47275
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            72,
+            0
+          ]
+        }
+      },
+      "Palm3Leaf2": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -100.10344,
+            10.6,
+            49.52824
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            144,
+            0
+          ]
+        }
+      },
+      "Palm3Leaf3": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -100.10344,
+            10.6,
+            46.47176
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            216,
+            0
+          ]
+        }
+      },
+      "Palm3Leaf4": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -97.19656,
+            10.6,
+            45.52725
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            288,
+            0
+          ]
+        }
+      },
+      "Palm3Leaf5": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
             -95.4,
             10.6,
             48
@@ -4827,123 +4949,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
-            0
-          ]
-        }
-      },
-      "Palm3Leaf2": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -97.2,
-            10.6,
-            50.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -72,
-            0
-          ]
-        }
-      },
-      "Palm3Leaf3": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -100.1,
-            10.6,
-            49.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -144,
-            0
-          ]
-        }
-      },
-      "Palm3Leaf4": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -100.1,
-            10.6,
-            46.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -216,
-            0
-          ]
-        }
-      },
-      "Palm3Leaf5": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -97.2,
-            10.6,
-            45.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -288,
+            360,
             0
           ]
         }
@@ -5003,6 +5009,122 @@
         "$properties": {
           "Anchored": true,
           "Position": [
+            98.80344,
+            10.6,
+            50.47275
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            72,
+            0
+          ]
+        }
+      },
+      "Palm4Leaf2": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            95.89656,
+            10.6,
+            49.52824
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            144,
+            0
+          ]
+        }
+      },
+      "Palm4Leaf3": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            95.89656,
+            10.6,
+            46.47176
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            216,
+            0
+          ]
+        }
+      },
+      "Palm4Leaf4": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            98.80344,
+            10.6,
+            45.52725
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            288,
+            0
+          ]
+        }
+      },
+      "Palm4Leaf5": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
             100.6,
             10.6,
             48
@@ -5022,123 +5144,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
-            0
-          ]
-        }
-      },
-      "Palm4Leaf2": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            98.8,
-            10.6,
-            50.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -72,
-            0
-          ]
-        }
-      },
-      "Palm4Leaf3": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            95.9,
-            10.6,
-            49.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -144,
-            0
-          ]
-        }
-      },
-      "Palm4Leaf4": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            95.9,
-            10.6,
-            46.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -216,
-            0
-          ]
-        }
-      },
-      "Palm4Leaf5": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            98.8,
-            10.6,
-            45.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -288,
+            360,
             0
           ]
         }
@@ -5198,6 +5204,122 @@
         "$properties": {
           "Anchored": true,
           "Position": [
+            -57.19656,
+            10.6,
+            100.47275
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            72,
+            0
+          ]
+        }
+      },
+      "Palm5Leaf2": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -60.10344,
+            10.6,
+            99.52824
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            144,
+            0
+          ]
+        }
+      },
+      "Palm5Leaf3": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -60.10344,
+            10.6,
+            96.47176
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            216,
+            0
+          ]
+        }
+      },
+      "Palm5Leaf4": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -57.19656,
+            10.6,
+            95.52725
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            288,
+            0
+          ]
+        }
+      },
+      "Palm5Leaf5": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
             -55.4,
             10.6,
             98
@@ -5217,123 +5339,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
-            0
-          ]
-        }
-      },
-      "Palm5Leaf2": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -57.2,
-            10.6,
-            100.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -72,
-            0
-          ]
-        }
-      },
-      "Palm5Leaf3": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -60.1,
-            10.6,
-            99.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -144,
-            0
-          ]
-        }
-      },
-      "Palm5Leaf4": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -60.1,
-            10.6,
-            96.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -216,
-            0
-          ]
-        }
-      },
-      "Palm5Leaf5": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -57.2,
-            10.6,
-            95.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -288,
+            360,
             0
           ]
         }
@@ -5393,6 +5399,122 @@
         "$properties": {
           "Anchored": true,
           "Position": [
+            70.80344,
+            10.6,
+            102.47275
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            72,
+            0
+          ]
+        }
+      },
+      "Palm6Leaf2": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            67.89656,
+            10.6,
+            101.52824
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            144,
+            0
+          ]
+        }
+      },
+      "Palm6Leaf3": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            67.89656,
+            10.6,
+            98.47176
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            216,
+            0
+          ]
+        }
+      },
+      "Palm6Leaf4": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            70.80344,
+            10.6,
+            97.52725
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            288,
+            0
+          ]
+        }
+      },
+      "Palm6Leaf5": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
             72.6,
             10.6,
             100
@@ -5412,123 +5534,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
-            0
-          ]
-        }
-      },
-      "Palm6Leaf2": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            70.8,
-            10.6,
-            102.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -72,
-            0
-          ]
-        }
-      },
-      "Palm6Leaf3": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            67.9,
-            10.6,
-            101.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -144,
-            0
-          ]
-        }
-      },
-      "Palm6Leaf4": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            67.9,
-            10.6,
-            98.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -216,
-            0
-          ]
-        }
-      },
-      "Palm6Leaf5": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            70.8,
-            10.6,
-            97.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -288,
+            360,
             0
           ]
         }
@@ -5588,6 +5594,122 @@
         "$properties": {
           "Anchored": true,
           "Position": [
+            -107.19656,
+            10.6,
+            16.47275
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            72,
+            0
+          ]
+        }
+      },
+      "Palm7Leaf2": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -110.10344,
+            10.6,
+            15.52824
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            144,
+            0
+          ]
+        }
+      },
+      "Palm7Leaf3": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -110.10344,
+            10.6,
+            12.47176
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            216,
+            0
+          ]
+        }
+      },
+      "Palm7Leaf4": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            -107.19656,
+            10.6,
+            11.52725
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            288,
+            0
+          ]
+        }
+      },
+      "Palm7Leaf5": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
             -105.4,
             10.6,
             14
@@ -5607,123 +5729,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
-            0
-          ]
-        }
-      },
-      "Palm7Leaf2": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -107.2,
-            10.6,
-            16.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -72,
-            0
-          ]
-        }
-      },
-      "Palm7Leaf3": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -110.1,
-            10.6,
-            15.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -144,
-            0
-          ]
-        }
-      },
-      "Palm7Leaf4": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -110.1,
-            10.6,
-            12.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -216,
-            0
-          ]
-        }
-      },
-      "Palm7Leaf5": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            -107.2,
-            10.6,
-            11.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -288,
+            360,
             0
           ]
         }
@@ -5783,6 +5789,122 @@
         "$properties": {
           "Anchored": true,
           "Position": [
+            108.80344,
+            10.6,
+            16.47275
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            72,
+            0
+          ]
+        }
+      },
+      "Palm8Leaf2": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            105.89656,
+            10.6,
+            15.52824
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            144,
+            0
+          ]
+        }
+      },
+      "Palm8Leaf3": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            105.89656,
+            10.6,
+            12.47176
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            216,
+            0
+          ]
+        }
+      },
+      "Palm8Leaf4": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
+            108.80344,
+            10.6,
+            11.52725
+          ],
+          "Size": [
+            7,
+            0.35,
+            2.2
+          ],
+          "Color": [
+            0.23529,
+            0.78431,
+            0.35294
+          ],
+          "Material": "SmoothPlastic",
+          "CanCollide": false,
+          "Transparency": 0,
+          "Orientation": [
+            0,
+            288,
+            0
+          ]
+        }
+      },
+      "Palm8Leaf5": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Position": [
             110.6,
             10.6,
             14
@@ -5802,123 +5924,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
-            0
-          ]
-        }
-      },
-      "Palm8Leaf2": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            108.8,
-            10.6,
-            16.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -72,
-            0
-          ]
-        }
-      },
-      "Palm8Leaf3": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            105.9,
-            10.6,
-            15.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -144,
-            0
-          ]
-        }
-      },
-      "Palm8Leaf4": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            105.9,
-            10.6,
-            12.47
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -216,
-            0
-          ]
-        }
-      },
-      "Palm8Leaf5": {
-        "$className": "Part",
-        "$properties": {
-          "Anchored": true,
-          "Position": [
-            108.8,
-            10.6,
-            11.53
-          ],
-          "Size": [
-            7,
-            0.35,
-            2.2
-          ],
-          "Color": [
-            0.23529,
-            0.78431,
-            0.35294
-          ],
-          "Material": "SmoothPlastic",
-          "CanCollide": false,
-          "Transparency": 0,
-          "Orientation": [
-            0,
-            -288,
+            360,
             0
           ]
         }
@@ -5963,9 +5969,9 @@
             5
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -5988,9 +5994,9 @@
             6
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6013,9 +6019,9 @@
             4
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6038,9 +6044,9 @@
             5
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6063,9 +6069,9 @@
             4
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6088,9 +6094,9 @@
             3
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6113,9 +6119,9 @@
             3.5
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6138,9 +6144,9 @@
             4
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6163,9 +6169,9 @@
             4.5
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6188,9 +6194,9 @@
             4
           ],
           "Color": [
-            0.5098,
-            0.5098,
-            0.52941
+            0.52941,
+            0.52941,
+            0.54902
           ],
           "Material": "Slate",
           "CanCollide": true,
@@ -6602,7 +6608,7 @@
           "Transparency": 0,
           "Shape": "Ball"
         },
-        "PointLight": {
+        "Light": {
           "$className": "PointLight",
           "$properties": {
             "Color": [
@@ -6663,7 +6669,7 @@
           "Transparency": 0,
           "Shape": "Ball"
         },
-        "PointLight": {
+        "Light": {
           "$className": "PointLight",
           "$properties": {
             "Color": [
@@ -6822,7 +6828,7 @@
           "Transparency": 0,
           "Shape": "Ball"
         },
-        "PointLight": {
+        "Light": {
           "$className": "PointLight",
           "$properties": {
             "Color": [
@@ -7408,7 +7414,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
+            15,
             0
           ]
         }
@@ -7437,7 +7443,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            15,
+            30,
             0
           ]
         }
@@ -7466,7 +7472,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            30,
+            45,
             0
           ]
         }
@@ -7495,7 +7501,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            45,
+            60,
             0
           ]
         }
@@ -7774,7 +7780,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            0,
+            40,
             0
           ]
         }
@@ -7803,7 +7809,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            40,
+            80,
             0
           ]
         }
@@ -7832,7 +7838,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            80,
+            120,
             0
           ]
         }
@@ -7861,7 +7867,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            120,
+            160,
             0
           ]
         }
@@ -7890,7 +7896,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            160,
+            200,
             0
           ]
         }
@@ -7919,7 +7925,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            200,
+            240,
             0
           ]
         }
@@ -7948,7 +7954,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            240,
+            280,
             0
           ]
         }
@@ -7977,7 +7983,7 @@
           "Transparency": 0,
           "Orientation": [
             0,
-            280,
+            320,
             0
           ]
         }
@@ -8694,13 +8700,13 @@
           "Transparency": 0,
           "Shape": "Cylinder"
         },
-        "PointLight": {
+        "Light": {
           "$className": "PointLight",
           "$properties": {
             "Color": [
               1,
-              0.86275,
-              0.5098
+              0.70588,
+              0.35294
             ],
             "Range": 30,
             "Brightness": 3
@@ -8732,7 +8738,7 @@
           "Shape": "Ball"
         }
       },
-      "Gull1WingL": {
+      "Seagull1WingL": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8761,7 +8767,7 @@
           ]
         }
       },
-      "Gull1WingR": {
+      "Seagull1WingR": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8790,7 +8796,7 @@
           ]
         }
       },
-      "Gull2WingL": {
+      "Seagull2WingL": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8819,7 +8825,7 @@
           ]
         }
       },
-      "Gull2WingR": {
+      "Seagull2WingR": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8848,7 +8854,7 @@
           ]
         }
       },
-      "Gull3WingL": {
+      "Seagull3WingL": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8877,7 +8883,7 @@
           ]
         }
       },
-      "Gull3WingR": {
+      "Seagull3WingR": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8906,7 +8912,7 @@
           ]
         }
       },
-      "Gull4WingL": {
+      "Seagull4WingL": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8935,7 +8941,7 @@
           ]
         }
       },
-      "Gull4WingR": {
+      "Seagull4WingR": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8964,7 +8970,7 @@
           ]
         }
       },
-      "Gull5WingL": {
+      "Seagull5WingL": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -8993,7 +8999,7 @@
           ]
         }
       },
-      "Gull5WingR": {
+      "Seagull5WingR": {
         "$className": "Part",
         "$properties": {
           "Anchored": true,
@@ -9068,8 +9074,7 @@
           ],
           "Material": "Sand",
           "CanCollide": true,
-          "Transparency": 0,
-          "Shape": "Cylinder"
+          "Transparency": 0
         }
       },
       "SandcastlePole": {
@@ -9123,6 +9128,7 @@
       }
     },
     "Lighting": {
+      "$className": "Lighting",
       "$properties": {
         "Ambient": [
           0.45,
@@ -9169,6 +9175,7 @@
       }
     },
     "SoundService": {
+      "$className": "SoundService",
       "$properties": {
         "RespectFilteringEnabled": true
       }

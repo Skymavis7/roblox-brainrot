@@ -1,21 +1,16 @@
--- MoneyService — the money tick. Every second, each player's base earns the
--- sum of its brainrots' dollars-per-second, times their rebirth and upgrade
--- multipliers. The HUD reads the leaderstats this writes, so the cash counter
--- visibly ticks up.
-
-local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
+-- MoneyService: pays every player one second of income, every second.
+local PlayerData = require(script.Parent.PlayerData)
 
 local MoneyService = {}
 
--- Pay every player one second of income, and refresh their Income leaderstat.
 function MoneyService.payIncomeTick()
-	for player, state in pairs(PlayerData.all()) do
+	for _, state in pairs(PlayerData.all()) do
 		local income = PlayerData.calculateIncome(state)
-		local folder = player:FindFirstChild("leaderstats")
-		if folder ~= nil then
-			local incomeValue = folder:FindFirstChild("Income")
-			if incomeValue ~= nil and incomeValue:IsA("IntValue") then
-				incomeValue.Value = math.floor(income)
+		local board = state.leaderstats
+		if board then
+			local value = board:FindFirstChild("Income")
+			if value then
+				value.Value = math.floor(income)
 			end
 		end
 		if income > 0 then

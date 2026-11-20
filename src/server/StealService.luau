@@ -1,124 +1,120 @@
--- StealService — stealing from other players' bases, and the slap that stops it.
--- A brainrot on an unlocked base can be stolen: it follows the thief home, and
--- if the thief reaches their own base it becomes theirs. The owner (or anyone)
--- can slap the thief to knock them back and make the brainrot run home. A
--- locked base cannot be stolen from.
-
+-- StealService: stealing brainrots off unlocked bases, and slapping thieves.
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
-local BaseService = require(script.Parent:WaitForChild("BaseService"))
-local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
+local Config = require(ReplicatedStorage.Shared.GameConfig)
+local PlayerData = require(script.Parent.PlayerData)
+local BaseService = require(script.Parent.BaseService)
 
 local StealService = {}
 
-local notifyRemote: RemoteEvent
+local notifyRemote = nil
 
--- Try to steal a brainrot off someone's base. The lock and the carrier rule
--- decide it; a stolen brainrot remembers its real home so it can run back.
-function StealService.trySteal(thief: Player, thiefState, model: Model)
+local function notify(player, message)
+	if notifyRemote then
+		notifyRemote:FireClient(player, message)
+	end
+end
+
+function StealService.trySteal(thief, thiefState, model)
 	local ownerId = model:GetAttribute("OwnerId")
-	if typeof(ownerId) ~= "number" or ownerId == thief.UserId then
+	if type(ownerId) ~= "number" or ownerId == thief.UserId then
 		return
 	end
-	if thiefState.carried ~= nil then
-		notifyRemote:FireClient(thief, "You are already carrying a brainrot!")
+	if thiefState.carried then
+		notify(thief, "You are already carrying a brainrot!")
 		return
 	end
-	local owner: Player? = nil
-	local ownerState = nil
-	for other, otherState in pairs(PlayerData.all()) do
-		if other.UserId == ownerId then
-			owner = other
-			ownerState = otherState
-			break
-		end
+	local owner = Players:GetPlayerByUserId(ownerId)
+	if not owner then
+		return
 	end
-	if owner == nil or ownerState == nil then
+	local ownerState = PlayerData.get(owner)
+	if not ownerState then
 		return
 	end
 	if PlayerData.isBaseLocked(ownerState) then
-		notifyRemote:FireClient(thief, owner.DisplayName .. "'s base is LOCKED! Come back later.")
+		notify(thief, owner.DisplayName .. "'s base is LOCKED! Come back later.")
 		return
 	end
-	-- Off the slot, onto the thief's trail. HomeOwnerId remembers where it belongs.
 	BaseService.removeFromBase(ownerState, model)
 	model:SetAttribute("HomeOwnerId", ownerId)
 	model:SetAttribute("State", "Following")
 	model:SetAttribute("OwnerId", thief.UserId)
 	thiefState.carried = model
 	thief:SetAttribute("Carrying", model.Name)
-	-- Hand the follower to the conveyor's trailing loop (required lazily: the
-	-- conveyor requires this module back, so an eager require would cycle).
-	local conveyor = require(script.Parent:WaitForChild("ConveyorService"))
-	conveyor.registerFollower(thief, model)
-	notifyRemote:FireClient(thief, "You stole " .. model.Name .. "! RUN home before they slap you!")
-	notifyRemote:FireClient(owner, thief.DisplayName .. " is stealing your " .. model.Name .. "! SLAP them!")
+	-- Lazy require: ConveyorService requires this module back.
+	local ConveyorService = require(script.Parent.ConveyorService)
+	ConveyorService.registerFollower(thief, model)
+	notify(thief, "You stole " .. model.Name .. "! RUN home before they slap you!")
+	notify(owner, thief.DisplayName .. " is stealing your " .. model.Name .. "! SLAP them!")
 end
 
--- Slap the nearest other player in range: knock them back and make them drop
--- whatever they were carrying.
-function StealService.slap(player: Player, state)
+function StealService.slap(player, state)
 	local now = os.clock()
 	if now < state.slapCooldownUntil then
 		return
 	end
-	state.slapCooldownUntil = now + GameConfig.SLAP_COOLDOWN
-	local character = player.Character
-	local root = character and character:FindFirstChild("HumanoidRootPart")
-	if root == nil then
+	state.slapCooldownUntil = now + Config.SLAP_COOLDOWN
+
+	local myRoot = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+	if not myRoot then
 		return
 	end
-	local best: Player? = nil
-	local bestDistance = GameConfig.SLAP_RANGE
-	for other in pairs(PlayerData.all()) do
+	local nearest, nearestDistance = nil, Config.SLAP_RANGE
+	for _, other in ipairs(Players:GetPlayers()) do
 		if other ~= player then
-			local otherCharacter = other.Character
-			local otherRoot = otherCharacter and otherCharacter:FindFirstChild("HumanoidRootPart")
-			if otherRoot ~= nil then
-				local distance = (otherRoot.Position - root.Position).Magnitude
-				if distance < bestDistance then
-					bestDistance = distance
-					best = other
+			local root = other.Character and other.Character:FindFirstChild("HumanoidRootPart")
+			if root then
+				local distance = (root.Position - myRoot.Position).Magnitude
+				if distance <= nearestDistance then
+					nearest, nearestDistance = other, distance
 				end
 			end
 		end
 	end
-	if best == nil then
-		notifyRemote:FireClient(player, "Slap! ...nobody in range.")
+	if not nearest then
+		notify(player, "Slap! ...nobody in range.")
 		return
 	end
-	local victimCharacter = best.Character
-	local victimRoot = victimCharacter and victimCharacter:FindFirstChild("HumanoidRootPart")
-	local victimHumanoid = victimCharacter and victimCharacter:FindFirstChildOfClass("Humanoid")
-	if victimRoot == nil then
-		return
+
+	local victimRoot = nearest.Character:FindFirstChild("HumanoidRootPart")
+	local away = (victimRoot.Position - myRoot.Position)
+	if away.Magnitude < 0.01 then
+		away = Vector3.new(0, 0, 1)
 	end
-	local away = (victimRoot.Position - root.Position).Unit
-	victimRoot.AssemblyLinearVelocity = away * GameConfig.SLAP_KNOCKBACK + Vector3.new(0, 25, 0)
-	if victimHumanoid ~= nil then
-		victimHumanoid.WalkSpeed = 0
+	away = away.Unit
+	victimRoot.AssemblyLinearVelocity = away * Config.SLAP_KNOCKBACK + Vector3.new(0, 25, 0)
+
+	local humanoid = nearest.Character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		local victimState = PlayerData.get(nearest)
+		local restoreSpeed = 16
+		if victimState and victimState.upgrades.speed then
+			restoreSpeed = 24
+		end
+		humanoid.WalkSpeed = 0
 		task.delay(1, function()
-			if victimHumanoid.Parent ~= nil then
-				victimHumanoid.WalkSpeed = 16
+			if humanoid.Parent then
+				humanoid.WalkSpeed = restoreSpeed
 			end
 		end)
 	end
-	-- A slapped thief drops the brainrot, which runs back to its real home.
-	local victimState = PlayerData.get(best)
-	if victimState ~= nil and victimState.carried ~= nil then
-		local conveyor = require(script.Parent:WaitForChild("ConveyorService"))
-		conveyor.dropCarried(best, victimState, true)
-		notifyRemote:FireClient(best, "You got SLAPPED and dropped the brainrot!")
+
+	local victimState = PlayerData.get(nearest)
+	if victimState and victimState.carried then
+		local ConveyorService = require(script.Parent.ConveyorService)
+		ConveyorService.dropCarried(nearest, victimState, true)
+		notify(nearest, "You got SLAPPED and dropped the brainrot!")
 	end
-	notifyRemote:FireClient(player, "SLAP! You sent " .. best.DisplayName .. " flying!")
+	notify(player, "SLAP! You sent " .. nearest.DisplayName .. " flying!")
 end
 
-function StealService.start(remotes: { notify: RemoteEvent, slap: RemoteEvent })
-	notifyRemote = remotes.notify
-	remotes.slap.OnServerEvent:Connect(function(player)
+function StealService.start(remotes)
+	notifyRemote = remotes.Notify
+	remotes.Slap.OnServerEvent:Connect(function(player)
 		local state = PlayerData.get(player)
-		if state ~= nil then
+		if state then
 			StealService.slap(player, state)
 		end
 	end)

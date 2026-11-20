@@ -1,291 +1,323 @@
--- Brainrot Lagoon — client HUD.
--- A ScreenGui over the 3D world: cash and income up top, the tsunami countdown
--- banner, Slap / Lock / Rebirth / Shop buttons on the right, the character
--- catalog, the upgrade shop, and toast notifications for everything the server
--- tells you. The player still moves with WASD and the camera in 3D; this is
--- only the interface over that world.
-
+-- Hud.client: the Brainrot Lagoon HUD — cash, income, rebirth, tsunami
+-- countdown, carry status, slap/lock/rebirth/shop buttons, catalog + shop,
+-- and toasts from the server.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
-local BrainrotCatalog = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("BrainrotCatalog"))
-local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
+local Catalog = require(ReplicatedStorage.Shared.BrainrotCatalog)
+local Config = require(ReplicatedStorage.Shared.GameConfig)
 
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local gameState = ReplicatedStorage:WaitForChild("GameState")
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local notifyRemote = remotes:WaitForChild("Notify")
 local slapRemote = remotes:WaitForChild("Slap")
+local lockRemote = remotes:WaitForChild("LockBase")
 local rebirthRemote = remotes:WaitForChild("Rebirth")
 local buyUpgradeRemote = remotes:WaitForChild("BuyUpgrade")
-local lockBaseRemote = remotes:WaitForChild("LockBase")
+local gameState = ReplicatedStorage:WaitForChild("GameState")
+local waveCountdown = gameState:WaitForChild("WaveCountdown")
+local wavePhase = gameState:WaitForChild("WaveState")
+local leaderstats = player:WaitForChild("leaderstats")
+local cashValue = leaderstats:WaitForChild("Cash")
+local incomeValue = leaderstats:WaitForChild("Income")
+local rebirthsValue = leaderstats:WaitForChild("Rebirths")
+
+local PANEL = Color3.fromRGB(20, 20, 30)
+local WHITE = Color3.fromRGB(255, 255, 255)
+local GREEN = Color3.fromRGB(120, 255, 130)
+local YELLOW = Color3.fromRGB(255, 230, 120)
+local PURPLE = Color3.fromRGB(200, 150, 255)
+local SKY = Color3.fromRGB(140, 220, 255)
 
 local gui = Instance.new("ScreenGui")
 gui.Name = "BrainrotHud"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
-gui.Parent = playerGui
+gui.Parent = player:WaitForChild("PlayerGui")
 
-local PANEL = Color3.fromRGB(20, 20, 30)
-local WHITE = Color3.fromRGB(255, 255, 255)
-
-local function roundCorners(parent: Instance, radius: number)
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, radius)
-	corner.Parent = parent
+local function corner(parent, radius)
+	local ui = Instance.new("UICorner")
+	ui.CornerRadius = UDim.new(0, radius)
+	ui.Parent = parent
+	return ui
 end
 
-local function makeLabel(parent, name, position, size, text, textSize, color, font)
+local function makeLabel(parent, text, size, font, textSize, color, position, anchor)
 	local label = Instance.new("TextLabel")
-	label.Name = name
-	label.Position = position
 	label.Size = size
-	label.BackgroundColor3 = PANEL
-	label.BackgroundTransparency = 0.25
-	label.BorderSizePixel = 0
-	label.Text = text
+	label.Position = position
+	label.AnchorPoint = anchor or Vector2.new(0, 0)
+	label.BackgroundTransparency = 1
+	label.Font = font
 	label.TextSize = textSize
 	label.TextColor3 = color
-	label.Font = font or Enum.Font.SourceSansBold
-	label.TextStrokeTransparency = 0.3
+	label.Text = text
 	label.Parent = parent
-	roundCorners(label, 8)
 	return label
 end
 
-local function makeButton(parent, name, position, size, text, color)
+local function makeButton(parent, text, size, position, color, textSize)
 	local button = Instance.new("TextButton")
-	button.Name = name
-	button.Position = position
 	button.Size = size
+	button.Position = position
 	button.BackgroundColor3 = color
-	button.BorderSizePixel = 0
-	button.Text = text
-	button.TextSize = 20
+	button.Font = Enum.Font.FredokaOne
+	button.TextSize = textSize or 20
 	button.TextColor3 = WHITE
-	button.Font = Enum.Font.SourceSansBold
-	button.TextStrokeTransparency = 0.3
+	button.Text = text
 	button.Parent = parent
-	roundCorners(button, 10)
+	corner(button, 10)
 	return button
 end
 
--- Top bar: cash, income per second, rebirths. Centred, clear of the Roblox
--- menu buttons.
+-- ---------------------------------------------------------------- top bar
 local topBar = Instance.new("Frame")
 topBar.Name = "TopBar"
-topBar.AnchorPoint = Vector2.new(0.5, 0)
-topBar.Position = UDim2.new(0.5, 0, 0, 12)
 topBar.Size = UDim2.fromOffset(520, 52)
-topBar.BackgroundTransparency = 1
+topBar.Position = UDim2.new(0.5, 0, 0, 12)
+topBar.AnchorPoint = Vector2.new(0.5, 0)
+topBar.BackgroundColor3 = PANEL
+topBar.BackgroundTransparency = 0.2
 topBar.Parent = gui
+corner(topBar, 10)
 
-local cashLabel = makeLabel(topBar, "CashLabel", UDim2.fromOffset(0, 0), UDim2.fromOffset(220, 52),
-	"$100", 28, Color3.fromRGB(120, 255, 130), Enum.Font.FredokaOne)
-local incomeLabel = makeLabel(topBar, "IncomeLabel", UDim2.fromOffset(230, 0), UDim2.fromOffset(170, 52),
-	"+$0/s", 24, Color3.fromRGB(255, 230, 120))
-local rebirthLabel = makeLabel(topBar, "RebirthLabel", UDim2.fromOffset(410, 0), UDim2.fromOffset(110, 52),
-	"Rebirth 0", 20, Color3.fromRGB(200, 150, 255))
+local cashLabel = makeLabel(topBar, "$100", UDim2.fromOffset(220, 52), Enum.Font.FredokaOne, 28, GREEN, UDim2.fromOffset(8, 0))
+local incomeLabel = makeLabel(topBar, "+$0/s", UDim2.fromOffset(170, 52), Enum.Font.FredokaOne, 24, YELLOW, UDim2.fromOffset(228, 0))
+local rebirthLabel = makeLabel(topBar, "Rebirth 0", UDim2.fromOffset(110, 52), Enum.Font.FredokaOne, 20, PURPLE, UDim2.fromOffset(398, 0))
 
--- Tsunami banner under the top bar: calm countdown, then a red warning.
-local waveBanner = makeLabel(gui, "WaveBanner", UDim2.new(0.5, -260, 0, 76), UDim2.fromOffset(520, 44),
-	"Noodle Tsunami in 100s", 22, Color3.fromRGB(140, 220, 255))
-waveBanner.BackgroundTransparency = 0.45
+-- ---------------------------------------------------------------- tsunami banner
+local banner = Instance.new("Frame")
+banner.Name = "WaveBanner"
+banner.Size = UDim2.fromOffset(520, 44)
+banner.Position = UDim2.new(0.5, 0, 0, 76)
+banner.AnchorPoint = Vector2.new(0.5, 0)
+banner.BackgroundColor3 = PANEL
+banner.BackgroundTransparency = 0.2
+banner.Parent = gui
+corner(banner, 10)
 
--- Carried indicator: what you are holding and where it needs to go.
-local carryLabel = makeLabel(gui, "CarryLabel", UDim2.new(0.5, -200, 1, -120), UDim2.fromOffset(400, 40),
-	"", 20, WHITE)
+local bannerLabel = makeLabel(banner, "Noodle Tsunami in 100s", UDim2.new(1, 0, 1, 0), Enum.Font.FredokaOne, 22, SKY, UDim2.new(0, 0, 0, 0))
+bannerLabel.TextWrapped = true
+
+-- ---------------------------------------------------------------- carry label
+local carryLabel = makeLabel(
+	gui,
+	"",
+	UDim2.fromOffset(400, 40),
+	Enum.Font.SourceSansBold,
+	18,
+	WHITE,
+	UDim2.new(0.5, 0, 1, -56),
+	Vector2.new(0.5, 1)
+)
+carryLabel.BackgroundColor3 = PANEL
+carryLabel.BackgroundTransparency = 0.2
 carryLabel.Visible = false
+corner(carryLabel, 8)
 
--- Right-hand action buttons.
+-- ---------------------------------------------------------------- right-hand buttons
 local buttonStack = Instance.new("Frame")
-buttonStack.Name = "ActionButtons"
-buttonStack.AnchorPoint = Vector2.new(1, 0)
+buttonStack.Name = "ButtonStack"
+buttonStack.Size = UDim2.fromOffset(190, 240)
 buttonStack.Position = UDim2.new(1, -16, 0, 140)
-buttonStack.Size = UDim2.fromOffset(190, 260)
+buttonStack.AnchorPoint = Vector2.new(1, 0)
 buttonStack.BackgroundTransparency = 1
 buttonStack.Parent = gui
 
-local slapButton = makeButton(buttonStack, "SlapButton", UDim2.fromOffset(0, 0), UDim2.fromOffset(190, 52),
-	"SLAP  [F]", Color3.fromRGB(230, 80, 80))
-local lockButton = makeButton(buttonStack, "LockButton", UDim2.fromOffset(0, 62), UDim2.fromOffset(190, 52),
-	"LOCK BASE  [L]", Color3.fromRGB(70, 130, 230))
-local rebirthButton = makeButton(buttonStack, "RebirthButton", UDim2.fromOffset(0, 124), UDim2.fromOffset(190, 52),
-	"REBIRTH", Color3.fromRGB(160, 80, 220))
-local shopButton = makeButton(buttonStack, "ShopButton", UDim2.fromOffset(0, 186), UDim2.fromOffset(190, 52),
-	"CATALOG + SHOP", Color3.fromRGB(60, 180, 120))
+local slapButton = makeButton(buttonStack, "SLAP [F]", UDim2.fromOffset(190, 52), UDim2.fromOffset(0, 0), Color3.fromRGB(230, 80, 80))
+local lockButton = makeButton(buttonStack, "LOCK BASE [L]", UDim2.fromOffset(190, 52), UDim2.fromOffset(0, 62), Color3.fromRGB(70, 130, 230))
+local rebirthButton = makeButton(buttonStack, "REBIRTH", UDim2.fromOffset(190, 52), UDim2.fromOffset(0, 124), Color3.fromRGB(160, 80, 220))
+local shopButton = makeButton(buttonStack, "CATALOG + SHOP", UDim2.fromOffset(190, 52), UDim2.fromOffset(0, 186), Color3.fromRGB(60, 180, 120))
 
--- Catalog + upgrade shop panel, hidden until opened.
-local shopPanel = Instance.new("Frame")
-shopPanel.Name = "ShopPanel"
-shopPanel.AnchorPoint = Vector2.new(0.5, 0.5)
-shopPanel.Position = UDim2.fromScale(0.5, 0.5)
-shopPanel.Size = UDim2.fromOffset(560, 480)
-shopPanel.BackgroundColor3 = Color3.fromRGB(24, 24, 36)
-shopPanel.BorderSizePixel = 0
-shopPanel.Visible = false
-shopPanel.Parent = gui
-roundCorners(shopPanel, 12)
+-- ---------------------------------------------------------------- shop panel
+local shop = Instance.new("Frame")
+shop.Name = "ShopPanel"
+shop.Size = UDim2.fromOffset(560, 480)
+shop.Position = UDim2.new(0.5, 0, 0.5, 0)
+shop.AnchorPoint = Vector2.new(0.5, 0.5)
+shop.BackgroundColor3 = PANEL
+shop.Visible = false
+shop.Parent = gui
+corner(shop, 10)
 
-local shopTitle = makeLabel(shopPanel, "ShopTitle", UDim2.fromOffset(16, 12), UDim2.fromOffset(528, 40),
-	"WEIRDO CATALOG — buy them on the conveyor, place them on your base", 18, WHITE)
-shopTitle.BackgroundTransparency = 1
+makeLabel(
+	shop,
+	"WEIRDO CATALOG — buy them on the conveyor, place them on your base",
+	UDim2.new(1, -24, 0, 36),
+	Enum.Font.FredokaOne,
+	18,
+	WHITE,
+	UDim2.fromOffset(12, 8)
+)
 
 local catalogList = Instance.new("ScrollingFrame")
 catalogList.Name = "CatalogList"
-catalogList.Position = UDim2.fromOffset(16, 60)
 catalogList.Size = UDim2.fromOffset(528, 250)
+catalogList.Position = UDim2.fromOffset(16, 52)
 catalogList.BackgroundTransparency = 1
 catalogList.ScrollBarThickness = 6
-catalogList.CanvasSize = UDim2.fromOffset(0, #BrainrotCatalog.CHARACTERS * 46)
-catalogList.Parent = shopPanel
-local listLayout = Instance.new("UIListLayout")
-listLayout.Padding = UDim.new(0, 4)
-listLayout.Parent = catalogList
+catalogList.CanvasSize = UDim2.fromOffset(0, #Catalog.CHARACTERS * 42)
+catalogList.Parent = shop
 
--- One row per character: name in its rarity colour, $/s, buy cost.
-for _, entry in ipairs(BrainrotCatalog.CHARACTERS) do
-	local rarity = BrainrotCatalog.RARITIES[entry.rarity]
-	local row = Instance.new("Frame")
-	row.Name = entry.id
-	row.Size = UDim2.fromOffset(512, 42)
-	row.BackgroundColor3 = Color3.fromRGB(40, 40, 56)
-	row.BorderSizePixel = 0
-	row.Parent = catalogList
-	roundCorners(row, 8)
-
-	local function cell(x: number, width: number, text: string, color: Color3)
-		local label = Instance.new("TextLabel")
-		label.Position = UDim2.fromOffset(x, 0)
-		label.Size = UDim2.fromOffset(width, 42)
-		label.BackgroundTransparency = 1
-		label.Text = text
-		label.TextColor3 = color
-		label.TextSize = 18
-		label.Font = Enum.Font.SourceSansBold
-		label.Parent = row
-		return label
+local function rarityColor(name)
+	for _, rarity in ipairs(Catalog.RARITIES) do
+		if rarity.name == name then
+			return rarity.color
+		end
 	end
-	local nameCell = cell(10, 230, entry.name, rarity.color)
-	nameCell.TextXAlignment = Enum.TextXAlignment.Left
-	cell(250, 120, BrainrotCatalog.formatMoney(entry.rate) .. "/s", Color3.fromRGB(120, 255, 130))
-	cell(380, 120, BrainrotCatalog.formatMoney(entry.cost), Color3.fromRGB(255, 230, 120))
+	return WHITE
 end
 
-local upgradesTitle = makeLabel(shopPanel, "UpgradesTitle", UDim2.fromOffset(16, 322), UDim2.fromOffset(528, 30),
-	"UPGRADES — spend cash, keep them forever", 18, WHITE)
-upgradesTitle.BackgroundTransparency = 1
+for index, entry in ipairs(Catalog.CHARACTERS) do
+	local row = Instance.new("Frame")
+	row.Size = UDim2.new(1, 0, 0, 42)
+	row.Position = UDim2.fromOffset(0, (index - 1) * 42)
+	row.BackgroundTransparency = 1
+	row.Parent = catalogList
+	makeLabel(row, entry.name, UDim2.fromOffset(230, 42), Enum.Font.SourceSansBold, 18, rarityColor(entry.rarity), UDim2.fromOffset(4, 0))
+	makeLabel(
+		row,
+		Catalog.formatMoney(entry.rate) .. "/s",
+		UDim2.fromOffset(120, 42),
+		Enum.Font.SourceSansBold,
+		18,
+		GREEN,
+		UDim2.fromOffset(238, 0)
+	)
+	makeLabel(
+		row,
+		Catalog.formatMoney(entry.cost),
+		UDim2.fromOffset(120, 42),
+		Enum.Font.SourceSansBold,
+		18,
+		YELLOW,
+		UDim2.fromOffset(362, 0)
+	)
+end
 
-local upgradeY = 358
-for id, upgrade in pairs(GameConfig.UPGRADES) do
-	local button = makeButton(shopPanel, "Upgrade_" .. id, UDim2.fromOffset(16, upgradeY), UDim2.fromOffset(528, 34),
-		upgrade.name .. " — " .. BrainrotCatalog.formatMoney(upgrade.cost) .. "  •  " .. upgrade.description,
-		Color3.fromRGB(70, 120, 200))
-	button.TextSize = 16
+makeLabel(
+	shop,
+	"UPGRADES — spend cash, keep them forever",
+	UDim2.new(1, -24, 0, 30),
+	Enum.Font.FredokaOne,
+	18,
+	WHITE,
+	UDim2.fromOffset(12, 312)
+)
+
+local upgradeOrder = { "speed", "income", "slots" }
+for i, id in ipairs(upgradeOrder) do
+	local upgrade = Config.UPGRADES[id]
+	local button = makeButton(
+		shop,
+		upgrade.name .. " — " .. Catalog.formatMoney(upgrade.cost) .. "  •  " .. upgrade.description,
+		UDim2.fromOffset(528, 34),
+		UDim2.fromOffset(16, 344 + (i - 1) * 40),
+		Color3.fromRGB(70, 120, 200),
+		16
+	)
 	button.MouseButton1Click:Connect(function()
 		buyUpgradeRemote:FireServer(id)
 	end)
-	upgradeY += 40
 end
 
--- Toasts: server messages slide in at the bottom and fade away.
+-- ---------------------------------------------------------------- toasts
 local toastArea = Instance.new("Frame")
 toastArea.Name = "ToastArea"
-toastArea.AnchorPoint = Vector2.new(0.5, 1)
-toastArea.Position = UDim2.new(0.5, 0, 1, -170)
 toastArea.Size = UDim2.fromOffset(560, 120)
+toastArea.Position = UDim2.new(0.5, 0, 1, -128)
+toastArea.AnchorPoint = Vector2.new(0.5, 1)
 toastArea.BackgroundTransparency = 1
 toastArea.Parent = gui
 
-local function showToast(text: string)
+local activeToasts = {}
+
+local function reflowToasts()
+	for i, toast in ipairs(activeToasts) do
+		toast.Position = UDim2.new(0, 0, 1, -i * 38)
+	end
+end
+
+local function showToast(message)
 	local toast = Instance.new("TextLabel")
-	toast.Size = UDim2.fromOffset(560, 34)
+	toast.Size = UDim2.new(1, 0, 0, 34)
 	toast.BackgroundColor3 = PANEL
 	toast.BackgroundTransparency = 0.15
-	toast.BorderSizePixel = 0
-	toast.Text = text
-	toast.TextSize = 18
-	toast.TextColor3 = WHITE
 	toast.Font = Enum.Font.SourceSansBold
+	toast.TextSize = 17
+	toast.TextColor3 = WHITE
+	toast.Text = message
+	toast.TextWrapped = true
 	toast.Parent = toastArea
-	roundCorners(toast, 8)
-	-- Stack: older toasts rise.
-	for _, child in ipairs(toastArea:GetChildren()) do
-		if child:IsA("TextLabel") and child ~= toast then
-			child.Position = child.Position - UDim2.fromOffset(0, 38)
-		end
-	end
+	corner(toast, 8)
+	table.insert(activeToasts, 1, toast)
+	reflowToasts()
 	task.delay(4, function()
+		local at = table.find(activeToasts, toast)
+		if at then
+			table.remove(activeToasts, at)
+		end
 		toast:Destroy()
+		reflowToasts()
 	end)
 end
 
 notifyRemote.OnClientEvent:Connect(showToast)
 
--- Buttons and keys.
+-- ---------------------------------------------------------------- wiring
 slapButton.MouseButton1Click:Connect(function()
 	slapRemote:FireServer()
 end)
 lockButton.MouseButton1Click:Connect(function()
-	lockBaseRemote:FireServer()
+	lockRemote:FireServer()
 end)
 rebirthButton.MouseButton1Click:Connect(function()
 	rebirthRemote:FireServer()
 end)
 shopButton.MouseButton1Click:Connect(function()
-	shopPanel.Visible = not shopPanel.Visible
+	shop.Visible = not shop.Visible
 end)
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then
 		return
 	end
 	if input.KeyCode == Enum.KeyCode.F then
 		slapRemote:FireServer()
 	elseif input.KeyCode == Enum.KeyCode.L then
-		lockBaseRemote:FireServer()
+		lockRemote:FireServer()
 	elseif input.KeyCode == Enum.KeyCode.B then
-		shopPanel.Visible = not shopPanel.Visible
+		shop.Visible = not shop.Visible
 	end
 end)
 
--- Live numbers: cash, income and rebirths from leaderstats; wave from GameState.
-local leaderstats = player:WaitForChild("leaderstats")
-local cashValue = leaderstats:WaitForChild("Cash") :: IntValue
-local incomeValue = leaderstats:WaitForChild("Income") :: IntValue
-local rebirthsValue = leaderstats:WaitForChild("Rebirths") :: IntValue
-local waveCountdown = gameState:WaitForChild("WaveCountdown") :: IntValue
-local wavePhase = gameState:WaitForChild("WaveState") :: StringValue
+-- ---------------------------------------------------------------- live refresh
+local function refresh()
+	cashLabel.Text = Catalog.formatMoney(cashValue.Value)
+	incomeLabel.Text = "+" .. Catalog.formatMoney(incomeValue.Value) .. "/s"
+	local rebirths = rebirthsValue.Value
+	rebirthLabel.Text = "Rebirth " .. rebirths
+	rebirthButton.Text = "REBIRTH — " .. Catalog.formatMoney(Config.REBIRTH_BASE_COST * 2 ^ rebirths)
 
-local function refreshMoney()
-	cashLabel.Text = BrainrotCatalog.formatMoney(cashValue.Value)
-	incomeLabel.Text = "+" .. BrainrotCatalog.formatMoney(incomeValue.Value) .. "/s"
-	rebirthLabel.Text = "Rebirth " .. rebirthsValue.Value
-	rebirthButton.Text = "REBIRTH — " .. BrainrotCatalog.formatMoney(GameConfig.REBIRTH_BASE_COST * (2 ^ rebirthsValue.Value))
-end
-
-local function refreshWave()
+	local seconds = waveCountdown.Value
 	local phase = wavePhase.Value
 	if phase == "Warning" then
-		waveBanner.Text = "NOODLE TSUNAMI IN " .. waveCountdown.Value .. "s — RUN HOME!"
-		waveBanner.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
-		waveBanner.TextColor3 = WHITE
+		banner.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+		bannerLabel.TextColor3 = WHITE
+		bannerLabel.Text = "NOODLE TSUNAMI IN " .. seconds .. "s — RUN HOME!"
 	elseif phase == "Wave" then
-		waveBanner.Text = "THE NOODLE TSUNAMI IS HERE — STAY ON YOUR BASE!"
-		waveBanner.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
-		waveBanner.TextColor3 = WHITE
+		banner.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+		bannerLabel.TextColor3 = WHITE
+		bannerLabel.Text = "THE NOODLE TSUNAMI IS HERE — STAY ON YOUR BASE!"
 	else
-		waveBanner.Text = "Noodle Tsunami in " .. waveCountdown.Value .. "s"
-		waveBanner.BackgroundColor3 = PANEL
-		waveBanner.TextColor3 = Color3.fromRGB(140, 220, 255)
+		banner.BackgroundColor3 = PANEL
+		bannerLabel.TextColor3 = SKY
+		bannerLabel.Text = "Noodle Tsunami in " .. seconds .. "s"
 	end
-end
 
-local function refreshCarrying()
 	local carrying = player:GetAttribute("Carrying")
-	if typeof(carrying) == "string" and carrying ~= "" then
+	if type(carrying) == "string" and carrying ~= "" then
 		carryLabel.Text = "Carrying: " .. carrying .. " — take it to YOUR base!"
 		carryLabel.Visible = true
 	else
@@ -293,14 +325,12 @@ local function refreshCarrying()
 	end
 end
 
-cashValue:GetPropertyChangedSignal("Value"):Connect(refreshMoney)
-incomeValue:GetPropertyChangedSignal("Value"):Connect(refreshMoney)
-rebirthsValue:GetPropertyChangedSignal("Value"):Connect(refreshMoney)
-waveCountdown:GetPropertyChangedSignal("Value"):Connect(refreshWave)
-wavePhase:GetPropertyChangedSignal("Value"):Connect(refreshWave)
-player:GetAttributeChangedSignal("Carrying"):Connect(refreshCarrying)
+cashValue:GetPropertyChangedSignal("Value"):Connect(refresh)
+incomeValue:GetPropertyChangedSignal("Value"):Connect(refresh)
+rebirthsValue:GetPropertyChangedSignal("Value"):Connect(refresh)
+waveCountdown:GetPropertyChangedSignal("Value"):Connect(refresh)
+wavePhase:GetPropertyChangedSignal("Value"):Connect(refresh)
+player:GetAttributeChangedSignal("Carrying"):Connect(refresh)
 
-refreshMoney()
-refreshWave()
-refreshCarrying()
+refresh()
 showToast("Welcome to Brainrot Lagoon! Buy a weirdo on the conveyor!")

@@ -1,99 +1,104 @@
--- RebirthService — rebirths and the cash shop. A rebirth costs more every time
--- (100k, then double), wipes your cash and brainrots, and adds +50% income
--- forever. The shop sells Speed Boots, Double Scoop income and a 4-slot base
--- extension.
-
+-- RebirthService: rebirths and the cash shop (upgrades + base lock).
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local BrainrotCatalog = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("BrainrotCatalog"))
-local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
-local BaseService = require(script.Parent:WaitForChild("BaseService"))
-local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
+local Catalog = require(ReplicatedStorage.Shared.BrainrotCatalog)
+local Config = require(ReplicatedStorage.Shared.GameConfig)
+local PlayerData = require(script.Parent.PlayerData)
+local BaseService = require(script.Parent.BaseService)
 
 local RebirthService = {}
 
-local notifyRemote: RemoteEvent
+local notifyRemote = nil
 
--- What the next rebirth costs for this player.
-function RebirthService.rebirthCost(state): number
-	return GameConfig.REBIRTH_BASE_COST * (2 ^ state.rebirths)
+local function notify(player, message)
+	if notifyRemote then
+		notifyRemote:FireClient(player, message)
+	end
 end
 
--- Rebirth: wipe cash and brainrots, add +50% income, count it.
-function RebirthService.rebirth(player: Player, state)
+function RebirthService.rebirthCost(state)
+	return Config.REBIRTH_BASE_COST * 2 ^ state.rebirths
+end
+
+function RebirthService.rebirth(player, state)
 	local cost = RebirthService.rebirthCost(state)
 	if state.cash < cost then
-		notifyRemote:FireClient(player, "Rebirth costs " .. BrainrotCatalog.formatMoney(cost) .. ". Keep earning!")
+		notify(player, "Rebirth costs " .. Catalog.formatMoney(cost) .. ". Keep earning!")
 		return
 	end
-	-- Clear the base and anything carried.
+	-- Everything goes: placed brainrots and whatever is carried.
 	for _, model in pairs(state.placed) do
-		model:Destroy()
+		if model then
+			model:Destroy()
+		end
 	end
-	state.placed = {}
-	if state.carried ~= nil then
-		state.carried:Destroy()
-		state.carried = nil
+	table.clear(state.placed)
+	if state.carried then
+		local ConveyorService = require(script.Parent.ConveyorService)
+		ConveyorService.dropCarried(player, state, false)
 	end
 	PlayerData.setCash(state, 0)
 	PlayerData.setRebirths(state, state.rebirths + 1)
 	PlayerData.refreshBrainrotCount(state)
-	notifyRemote:FireClient(player, "REBIRTH #" .. state.rebirths .. "! Income x" ..
-		string.format("%.1f", state.incomeMultiplier) .. " forever. The grind begins again!")
+	notify(
+		player,
+		"REBIRTH #" .. state.rebirths .. "! Income x" .. string.format("%.1f", state.incomeMultiplier) .. " forever. The grind begins again!"
+	)
 end
 
--- Buy one shop upgrade with cash. Each can only be bought once.
-function RebirthService.buyUpgrade(player: Player, state, upgradeId: string)
-	local upgrade = GameConfig.UPGRADES[upgradeId]
-	if upgrade == nil then
+function RebirthService.buyUpgrade(player, state, upgradeId)
+	local upgrade = Config.UPGRADES[upgradeId]
+	if not upgrade then
 		return
 	end
-	if state.upgrades[upgradeId] == true then
-		notifyRemote:FireClient(player, "You already own " .. upgrade.name .. "!")
+	if state.upgrades[upgradeId] then
+		notify(player, "You already own " .. upgrade.name .. "!")
 		return
 	end
 	if state.cash < upgrade.cost then
-		notifyRemote:FireClient(player, upgrade.name .. " costs " .. BrainrotCatalog.formatMoney(upgrade.cost) .. "!")
+		notify(player, upgrade.name .. " costs " .. Catalog.formatMoney(upgrade.cost) .. "!")
 		return
 	end
-	PlayerData.addCash(state, -upgrade.cost)
+	PlayerData.setCash(state, state.cash - upgrade.cost)
 	state.upgrades[upgradeId] = true
 	if upgradeId == "speed" then
-		local character = player.Character
-		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-		if humanoid ~= nil then
+		local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid then
 			humanoid.WalkSpeed = 24
 		end
 	elseif upgradeId == "slots" then
-		state.slotCount = GameConfig.BASE_SLOT_COUNT_UPGRADED
+		state.slotCount = Config.BASE_SLOT_COUNT_UPGRADED
 	end
-	notifyRemote:FireClient(player, "Bought " .. upgrade.name .. "! " .. upgrade.description)
+	notify(player, "Bought " .. upgrade.name .. "! " .. upgrade.description)
 end
 
-function RebirthService.start(remotes: { notify: RemoteEvent, rebirth: RemoteEvent, buyUpgrade: RemoteEvent, lockBase: RemoteEvent })
-	notifyRemote = remotes.notify
-	remotes.rebirth.OnServerEvent:Connect(function(player)
+function RebirthService.start(remotes)
+	notifyRemote = remotes.Notify
+	remotes.Rebirth.OnServerEvent:Connect(function(player)
 		local state = PlayerData.get(player)
-		if state ~= nil then
+		if state then
 			RebirthService.rebirth(player, state)
 		end
 	end)
-	remotes.buyUpgrade.OnServerEvent:Connect(function(player, upgradeId)
+	remotes.BuyUpgrade.OnServerEvent:Connect(function(player, upgradeId)
+		if type(upgradeId) ~= "string" then
+			return
+		end
 		local state = PlayerData.get(player)
-		if state ~= nil and typeof(upgradeId) == "string" then
+		if state then
 			RebirthService.buyUpgrade(player, state, upgradeId)
 		end
 	end)
-	remotes.lockBase.OnServerEvent:Connect(function(player)
+	remotes.LockBase.OnServerEvent:Connect(function(player)
 		local state = PlayerData.get(player)
-		if state == nil then
+		if not state then
 			return
 		end
 		if BaseService.lockBase(state) then
-			notifyRemote:FireClient(player, "Base LOCKED for " .. GameConfig.LOCK_DURATION .. "s! Nobody can steal from you.")
+			notify(player, "Base LOCKED for 60s! Nobody can steal from you.")
 		else
 			local left = math.ceil(state.lockCooldownUntil - os.clock())
-			notifyRemote:FireClient(player, "Base lock is cooling down (" .. left .. "s left).")
+			notify(player, "Base lock is cooling down (" .. left .. "s left).")
 		end
 	end)
 end

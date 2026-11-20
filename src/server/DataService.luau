@@ -1,61 +1,72 @@
--- DataService — saves a player's cash, rebirths and upgrades between sessions.
--- Everything is wrapped in pcall: in Studio without API access it simply does
--- nothing, and a failed load keeps the fresh start.
-
+-- DataService: cash, rebirths and upgrades persist in a DataStore between
+-- sessions. In Studio without API access the store is nil and everything
+-- silently does nothing.
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local GameConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("GameConfig"))
-local PlayerData = require(script.Parent:WaitForChild("PlayerData"))
+local Config = require(ReplicatedStorage.Shared.GameConfig)
+local PlayerData = require(script.Parent.PlayerData)
 
 local DataService = {}
 
-local store: DataStore? = nil
-pcall(function()
-	store = DataStoreService:GetDataStore("BrainrotLagoonSaveV1")
-end)
+local STORE_NAME = "BrainrotLagoonSaveV1"
+local store = nil
+do
+	local ok, result = pcall(function()
+		return DataStoreService:GetDataStore(STORE_NAME)
+	end)
+	if ok then
+		store = result
+	end
+end
 
--- Load a returning player's save into their state. Silently keeps the fresh
--- start on any failure or any save that is not a table.
+local function saveKey(state)
+	return "player_" .. state.player.UserId
+end
+
 function DataService.loadSave(state)
-	if store == nil then
+	if not store then
 		return
 	end
 	local ok, data = pcall(function()
-		return store:GetAsync("player_" .. state.player.UserId)
+		return store:GetAsync(saveKey(state))
 	end)
-	if not ok or typeof(data) ~= "table" then
+	if not ok or type(data) ~= "table" then
 		return
 	end
-	if typeof(data.cash) == "number" then
+	if type(data.cash) == "number" then
 		PlayerData.setCash(state, data.cash)
 	end
-	if typeof(data.rebirths) == "number" then
+	if type(data.rebirths) == "number" then
 		PlayerData.setRebirths(state, data.rebirths)
 	end
-	if typeof(data.upgrades) == "table" then
-		for key, value in pairs(data.upgrades) do
-			if state.upgrades[key] ~= nil then
-				state.upgrades[key] = value == true
+	if type(data.upgrades) == "table" then
+		for _, key in ipairs({ "speed", "income", "slots" }) do
+			if data.upgrades[key] == true then
+				state.upgrades[key] = true
 			end
 		end
 		if state.upgrades.slots then
-			state.slotCount = GameConfig.BASE_SLOT_COUNT_UPGRADED
+			state.slotCount = Config.BASE_SLOT_COUNT_UPGRADED
 		end
 	end
 end
 
--- Save a leaving player's cash, rebirths and upgrades. Fails silently.
 function DataService.saveSave(state)
-	if store == nil then
+	if not store then
 		return
 	end
+	local payload = {
+		cash = state.cash,
+		rebirths = state.rebirths,
+		upgrades = {
+			speed = state.upgrades.speed,
+			income = state.upgrades.income,
+			slots = state.upgrades.slots,
+		},
+	}
 	pcall(function()
-		store:SetAsync("player_" .. state.player.UserId, {
-			cash = state.cash,
-			rebirths = state.rebirths,
-			upgrades = state.upgrades,
-		})
+		store:SetAsync(saveKey(state), payload)
 	end)
 end
 
